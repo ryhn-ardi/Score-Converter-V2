@@ -67,6 +67,30 @@ Ahmad Fauzi\t54
     methodC_desc: 'Fokus mendongkrak siswa di bawah KKM agar mencapai batas tuntas, sementara nilai yang sudah tuntas tetap terjaga.',
     methodC_formula: 'Skala piecewise untuk nilai x < KKM',
 
+    // Method E (Cascading Chain Rules: a < x -> b, a == x -> b + y, c == b + y -> c + z)
+    methodE_name: 'Metode D: Aturan Berjenjang Kustom (Rantai x, b, y, c, z)',
+    methodE_desc: 'Aturan berjenjang kustom: Jika a < x maka b; jika nilai = x maka b + y; jika nilai = c (b + y) maka c + z. Semua variabel x, b, y, c, z bisa Anda atur bebas!',
+    methodE_formula: 'a < x → b | a = x → b + y | a = c → c + z',
+
+    // Parameters details cascade
+    paramCascadeTitle: 'Parameter Aturan Berjenjang Kustom (Rantai x, b, y, c, z)',
+    paramCascadeDesc: 'Sesuaikan variabel ambang batas x, nilai konversi b, bonus y, dan bonus z sesuai kebijakan penilaian Anda.',
+    cascadeXLabel: 'Batas Ambang Pertama (x)',
+    cascadeXHint: 'Batas ketentuan minimum khusus (misal 75)',
+    cascadeBLabel: 'Nilai Konversi untuk a < x (b)',
+    cascadeBHint: 'Nilai hasil jika nilai asli siswa di bawah x (misal 75)',
+    cascadeYLabel: 'Bonus Tambahan untuk a = x (y)',
+    cascadeYHint: 'Siswa pas x mendapat b + y (misal {b} + {y} = {res})',
+    cascadeCLabel: 'Batas Ambang Kedua (c)',
+    cascadeCHint: 'Titik ambang kedua (default otomatis = b + y = {val})',
+    cascadeZLabel: 'Bonus Tambahan untuk a = c (z)',
+    cascadeZHint: 'Siswa yang mencapai c mendapat c + z (misal {c} + {z} = {res})',
+    cascadeCustomCToggle: 'Atur nilai c secara manual (Custom)',
+    cascadeTransitionLabel: 'Gaya Transisi Antara Jenjang',
+    cascadeTransitionSmooth: 'Skala Mulus & Proporsional (Sangat Direkomendasikan)',
+    cascadeTransitionStep: 'Lompatan Tangga Mutlak (Pure Stepwise)',
+    cascadeRuleSummary: 'Ringkasan Rantai Aturan Aktif',
+
     // Parameters details
     paramLinearTitle: 'Pengaturan Skala Linear (Min-Max)',
     targetMinLabel: 'Target Nilai Terendah (y_min)',
@@ -95,6 +119,41 @@ Ahmad Fauzi\t54
     sqrtMultiplierHint: 'Contoh: Nilai asli 49 menjadi {val} | 64 menjadi {val2}',
     maxCapLabel: 'Batas Nilai Maksimum (Ceiling)',
     maxCapHint: 'Mencegah nilai hasil konversi melebihi batas ini (misal 100)',
+
+    // Minimum Converted Score Floor & Top-Score Protection (Requested by user)
+    minScaledFloorTitle: 'Batas Bawah Nilai Akhir (Floor Nilai Rapor)',
+    minScaledFloorDesc: 'Pastikan tidak ada nilai akhir konversi yang di bawah batas minimum sekolah (misal rapor minimal 65 atau 70).',
+    minScaledFloorToggle: 'Aktifkan Batas Bawah Nilai Akhir',
+    minScaledFloorLabel: 'Batas Bawah Nilai Akhir (Floor)',
+    minScaledFloorBadge: 'Batas Bawah Rapor: {val}',
+
+    topScoreProtectionTitle: 'Perlindungan Nilai Siswa Tinggi (Anti-Inflasi Nilai 90+)',
+    topScoreProtectionDesc: 'Mencegah nilai tinggi (85-95) melonjak ke 97-100 saat mendongkrak nilai anjlok (misal 30), agar rapor tidak seragam dan kemampuan asli siswa tetap dihargai.',
+    topScoreModeNone: 'Skala Normal (Semua Naik)',
+    topScoreModeNoneDesc: 'Seluruh nilai dinaikkan proporsional mengikuti garis skala.',
+    topScoreModeLock: 'Kunci Nilai Tuntas (≥ KKM Tetap Nilai Asli)',
+    topScoreModeLockDesc: 'Siswa yang sudah tuntas (misal nilai 90) TETAP 90! Hanya siswa di bawah KKM yang didongkrak.',
+    topScoreModeDamped: 'Kenaikan Teredam (Makin Tinggi Makin Tipis)',
+    topScoreModeDampedDesc: 'Nilai rendah didongkrak maksimal, nilai mendekati batas atas hanya naik tipis, dan nilai tinggi (≥ threshold kunci) sama sekali TIDAK NAIK (+0).',
+    dampedSettingsTitle: 'Pengaturan Threshold & Batasan Redaman',
+    dampedStartLabel: 'Mulai Redaman di Nilai',
+    dampedStartHint: 'Nilai di bawah angka ini (misal 30) didongkrak penuh.',
+    dampedFreezeLabel: 'Batas Kunci Nilai Tinggi (Freeze Threshold / Kenaikan = +0)',
+    dampedFreezeHint: 'Nilai di atas atau sama dengan angka ini (misal 90, 91, 95) TIDAK NAIK SAMA SEKALI (+0 poin). Nilai asli siswa 100% terlindungi!',
+    dampedMaxBoostLabel: 'Batas Kenaikan Maksimal di Zona Transisi',
+    dampedMaxBoostHint: 'Batas tambahan poin maksimal untuk nilai di antara titik mulai dan titik kunci (misal maks +2 poin).',
+    dampedPreviewTitle: 'Matriks Uji Kenaikan Nilai (Transparan)',
+
+    // Pembeda Siswa Tuntas (Merit Gap)
+    meritGapTitle: 'Pembeda Siswa Tuntas (Merit Gap)',
+    meritGapToggle: 'Jamin Siswa Tuntas Lebih Tinggi dari Siswa yang Diangkat',
+    meritGapLabel: 'Margin Pembeda Prestasi (+Poin)',
+    meritGapHint: 'Jika siswa nilai anjlok (30) terangkat ke batas minimum khusus ({kkm}), siswa yang nilai aslinya memang {kkm} otomatis mendapat nilai lebih tinggi ({val}) agar adil!',
+    meritGapBadge: 'Pembeda Tuntas: +{val} pt',
+
+    maxDeltaCapTitle: 'Batas Kenaikan Maksimal (+Poin Maksimal)',
+    maxDeltaCapToggle: 'Batasi Kenaikan Poin Maksimal',
+    maxDeltaCapHint: 'Mencegah siswa mendapatkan kenaikan nilai melebihi batas bonus ini (misal maks +20 poin).',
 
     kkmTargetMinLabel: 'Target Min Siswa Remedial (y_min)',
     kkmTargetMinHint: 'Nilai terendah akan diangkat ke angka ini menuju KKM ({kkm})',
@@ -248,6 +307,30 @@ Ahmad Fauzi\t54
     methodC_desc: 'Focuses specifically on students below KKM to bring them to passing, keeping already passing grades intact or smoothly adjusted.',
     methodC_formula: 'Piecewise boost for x < KKM',
 
+    // Method E (Cascading Chain Rules: a < x -> b, a == x -> b + y, c == b + y -> c + z)
+    methodE_name: 'Method D: Custom Cascading Chain Rules (x, b, y, c, z)',
+    methodE_desc: 'Custom tiered rule: If a < x then b; if score = x then b + y; if score = c (b + y) then c + z. All variables x, b, y, c, z are fully customizable!',
+    methodE_formula: 'a < x → b | a = x → b + y | a = c → c + z',
+
+    // Parameters details cascade
+    paramCascadeTitle: 'Custom Cascading Chain Parameters (Variables x, b, y, c, z)',
+    paramCascadeDesc: 'Configure threshold x, converted score b, bonus y, and bonus z according to your custom grading policy.',
+    cascadeXLabel: 'First Threshold (x)',
+    cascadeXHint: 'Special minimum threshold score (e.g. 75)',
+    cascadeBLabel: 'Converted Score for a < x (b)',
+    cascadeBHint: 'Final score for students below x (e.g. 75)',
+    cascadeYLabel: 'Bonus for Score = x (y)',
+    cascadeYHint: 'Students exactly at x receive b + y (e.g. {b} + {y} = {res})',
+    cascadeCLabel: 'Second Threshold (c)',
+    cascadeCHint: 'Second threshold point (defaults to b + y = {val})',
+    cascadeZLabel: 'Bonus for Score = c (z)',
+    cascadeZHint: 'Students reaching c receive c + z (e.g. {c} + {z} = {res})',
+    cascadeCustomCToggle: 'Set value c manually (Custom)',
+    cascadeTransitionLabel: 'Tier Transition Style',
+    cascadeTransitionSmooth: 'Smooth & Proportional Scale (Recommended)',
+    cascadeTransitionStep: 'Exact Stepwise Jump',
+    cascadeRuleSummary: 'Active Cascading Rule Chain',
+
     // Parameters details
     paramLinearTitle: 'Linear Min-Max Parameters',
     targetMinLabel: 'Target Min (y_min)',
@@ -276,6 +359,41 @@ Ahmad Fauzi\t54
     sqrtMultiplierHint: 'Example: Raw 49 becomes {val} | 64 becomes {val2}',
     maxCapLabel: 'Maximum Score Cap',
     maxCapHint: 'Prevents any boosted score from exceeding this ceiling (e.g. 100)',
+
+    // Minimum Converted Score Floor & Top-Score Protection (Requested by user)
+    minScaledFloorTitle: 'Minimum Final Converted Score Floor (Report Card Floor)',
+    minScaledFloorDesc: 'Ensure no final score falls below this school minimum threshold (e.g. minimum 65 or 70 in report card).',
+    minScaledFloorToggle: 'Enable Minimum Converted Score Floor',
+    minScaledFloorLabel: 'Final Score Floor',
+    minScaledFloorBadge: 'Report Card Floor: {val}',
+
+    topScoreProtectionTitle: 'High-Score Inflation Protection (Anti-Inflation for 90+)',
+    topScoreProtectionDesc: 'Prevent top scores (85-95) from artificially leaping to 97-100 when boosting low failing scores (e.g. 30), keeping report card scores realistic and fair.',
+    topScoreModeNone: 'Standard Scale (All Boosted)',
+    topScoreModeNoneDesc: 'All scores are scaled proportionally along the linear curve.',
+    topScoreModeLock: 'Lock Passing Scores (≥ KKM Kept Original)',
+    topScoreModeLockDesc: 'Score of 90 stays 90! Only students below KKM are boosted, avoiding report card homogenization.',
+    topScoreModeDamped: 'Damped Boost (Tapers off near 100)',
+    topScoreModeDampedDesc: 'Low scores receive major boost, scores approaching upper limit taper off, and top scores (≥ freeze threshold) receive ZERO boost (+0).',
+    dampedSettingsTitle: 'Damping Threshold & Limits Settings',
+    dampedStartLabel: 'Start Damping at Score',
+    dampedStartHint: 'Scores below this threshold (e.g. 30) are boosted fully.',
+    dampedFreezeLabel: 'Freeze Threshold (Zero Boost / +0 Pts)',
+    dampedFreezeHint: 'Scores at or above this value (e.g. 90, 91, 95) receive +0 bonus! Original scores 100% protected.',
+    dampedMaxBoostLabel: 'Max Boost in Transition Zone',
+    dampedMaxBoostHint: 'Caps bonus points between start and freeze thresholds (e.g. max +2 pts).',
+    dampedPreviewTitle: 'Live Score Gain Matrix (Transparent)',
+
+    // Passing Student Merit Gap
+    meritGapTitle: 'Passing Student Merit Gap (Fair Distinction)',
+    meritGapToggle: 'Ensure Passing Students Score Higher Than Boosted Students',
+    meritGapLabel: 'Merit Distinction Margin (+Pts)',
+    meritGapHint: 'When failing students (e.g. 30) are boosted to KKM ({kkm}), students who naturally scored {kkm} automatically receive higher ({val}) to preserve fairness!',
+    meritGapBadge: 'Passing Gap: +{val} pts',
+
+    maxDeltaCapTitle: 'Maximum Point Gain Limit (+Max Points)',
+    maxDeltaCapToggle: 'Limit Maximum Point Gain',
+    maxDeltaCapHint: 'Caps the maximum bonus points any individual student can receive (e.g. max +20 pts).',
 
     kkmTargetMinLabel: 'Target Min for Failing Scores (y_min)',
     kkmTargetMinHint: 'Lowest score will scale to this value towards KKM ({kkm})',

@@ -1,9 +1,11 @@
-export type ScalingMethod = 'linear' | 'sqrt' | 'kkm-threshold' | 'constant-add';
+export type ScalingMethod = 'linear' | 'sqrt' | 'kkm-threshold' | 'constant-add' | 'cascading-chain';
 
 export type RoundingMode = 'round' | 'floor' | 'ceil';
 
 export type MaxSourceMode = 'auto' | 'custom';
 export type MinSourceMode = 'auto' | 'custom';
+export type TopScoreProtectionMode = 'none' | 'lock-kkm' | 'damped';
+export type CascadeTransitionMode = 'smooth' | 'step';
 
 export interface ScalingConfig {
   method: ScalingMethod;
@@ -18,6 +20,28 @@ export interface ScalingConfig {
   customXMin: number;
   sqrtMultiplier: number;
   maxCap: number;
+  // Minimum converted score floor (Batas Minimum Nilai Akhir Konversi/Rapor)
+  minScaledFloorEnabled: boolean;
+  minScaledFloor: number;
+  // Anti-inflasi nilai tinggi / perlindungan nilai siswa berkemampuan tinggi
+  topScoreProtection: TopScoreProtectionMode;
+  dampedStart: number; // Nilai mulai redaman (default KKM atau 75)
+  dampedFreezeThreshold: number; // Nilai di mana kenaikan = 0 (misal 90: nilai 90, 91, 95 tidak akan naik)
+  dampedMaxBoost: number; // Maksimal kenaikan poin di zona transisi (misal +2 poin)
+  // Margin Pembeda Siswa Tuntas (Merit Gap agar siswa nilai asli >= KKM pasti lebih tinggi dari siswa nilai anjlok yang diangkat)
+  meritGapEnabled: boolean;
+  meritGap: number;
+  // Custom Cascading Chain Rule (a < x -> b, a == x -> b + y, c == b + y -> c + z)
+  cascadeX: number; // Ambang batas x (misal 75)
+  cascadeB: number; // Nilai hasil b jika a < x (misal 75)
+  cascadeY: number; // Tambahan y jika nilai pas x (misal 3 -> jadi b + y = 78)
+  cascadeC: number; // Ambang batas c (default = b + y, misal 78)
+  cascadeCustomC: boolean; // Apakah c di-custom sendiri secara manual
+  cascadeZ: number; // Tambahan z jika nilai mencapai c (misal 2 -> jadi c + z = 80)
+  cascadeTransition: CascadeTransitionMode; // 'smooth' vs 'step'
+  // Batas bonus kenaikan nilai maksimal (Max Delta Cap)
+  maxDeltaCapEnabled: boolean;
+  maxDeltaCap: number;
   kkmScaleAbove: boolean; // For KKM piecewise: smooth scaling for scores above KKM
   constantAdd: number;
   decimals: 0 | 1 | 2;

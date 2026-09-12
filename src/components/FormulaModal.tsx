@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, BookOpen, CheckCircle2, TrendingUp, Zap, Compass } from 'lucide-react';
+import { X, BookOpen, CheckCircle2, TrendingUp, Zap, Compass, GitMerge } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
 interface FormulaModalProps {
@@ -145,6 +145,104 @@ export const FormulaModal: React.FC<FormulaModalProps> = ({ isOpen, onClose, lan
                   <strong>Smooth transition option:</strong> Allows preserving rank order above KKM so that students who earned high scores maintain a fair advantage.
                 </li>
               </ul>
+            )}
+          </div>
+
+          {/* Method D: Cascading Chain Rules */}
+          <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30">
+            <div className="flex items-center gap-2 font-bold text-blue-600 dark:text-blue-400 mb-2">
+              <GitMerge className="w-4 h-4" />
+              <span>{t.methodE_name}</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-white dark:bg-slate-800 font-mono text-xs my-2 text-slate-800 dark:text-slate-200 border border-blue-200 dark:border-blue-900">
+              1. Jika Nilai Asli &lt; x → Menjadi b<br />
+              2. Jika Nilai Asli = x → Menjadi b + y<br />
+              3. Jika Nilai Asli = c (default b + y) → Menjadi c + z<br />
+              4. Nilai Tinggi (&gt; c s.d 100) → Melandai proporsional (anti lonjakan)
+            </div>
+            {language === 'id' ? (
+              <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 text-xs">
+                <li>
+                  <strong>Sesuai Permintaan Guru:</strong> Menyelesaikan masalah keadilan siswa tuntas murni vs siswa remedial. Siswa di bawah x terangkat ke b, namun siswa yang mencapai x murni tetap lebih tinggi (b + y), dan jenjang seterusnya (c + z).
+                </li>
+                <li>
+                  <strong>Fleksibilitas Penuh:</strong> Anda dapat mengkustomisasi semua variabel x, b, y, c, z sesuai regulasi dan pedoman penilaian sekolah Anda.
+                </li>
+              </ul>
+            ) : (
+              <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 text-xs">
+                <li>
+                  <strong>Custom Chain Logic:</strong> Guarantees that students scoring below x are raised to b, while students legitimately reaching x get b + y, and students at c get c + z.
+                </li>
+                <li>
+                  <strong>Total Customizability:</strong> All threshold variables x, b, y, c, z are fully customizable to align with your school grading standards.
+                </li>
+              </ul>
+            )}
+          </div>
+
+          {/* Anti-Inflation & Floor Guide */}
+          <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/30 text-xs">
+            <div className="flex items-center gap-2 font-bold text-purple-700 dark:text-purple-300 mb-2">
+              <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span>
+                {language === 'id'
+                  ? 'Solusi Khusus: Nilai Anjlok (30) vs Nilai Tinggi (90+)'
+                  : 'Special Solution: Low Failing Scores (30) vs High Achievers (90+)'}
+              </span>
+            </div>
+            {language === 'id' ? (
+              <div className="space-y-2 text-slate-700 dark:text-slate-300">
+                <p>
+                  <strong>Pertanyaan Guru:</strong> <em>"Jika ada nilai anjlok 30 lalu didongkrak, nilai 90 ke atas ikut terangkat jadi 95–97 padahal kemampuan aslinya tidak setinggi itu dan rapor jadi mirip-mirip. Bagaimana solusinya?"</em>
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 pt-1 font-medium">
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-800/80">
+                    <span className="font-bold text-purple-900 dark:text-purple-300 block mb-1">
+                      1. Kunci Nilai Tuntas
+                    </span>
+                    Nilai $\ge$ KKM (misal 90) TETAP 90! Hanya siswa &lt; KKM yang didongkrak.
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-800/80">
+                    <span className="font-bold text-purple-900 dark:text-purple-300 block mb-1">
+                      2. Batas Kunci Teredam (Freeze)
+                    </span>
+                    Pilih <strong>Kenaikan Teredam</strong> lalu setel Freeze Threshold = 90. Nilai 91, 92, 95 dijamin mendapat <strong>+0 kenaikan</strong> (terkunci nilai asli).
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-800/80">
+                    <span className="font-bold text-purple-900 dark:text-purple-300 block mb-1">
+                      3. Batas Bawah Rapor (Floor)
+                    </span>
+                    Tetapkan rapor minimal (misal 65). Siswa 30 otomatis jadi 65 tanpa menggeser kurva atas.
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/80 border border-blue-300 dark:border-blue-700">
+                    <span className="font-bold text-blue-900 dark:text-blue-300 block mb-1">
+                      4. Pembeda Tuntas (Merit Gap)
+                    </span>
+                    Jika siswa 30 diangkat ke 75, siswa yang aslinya 75 otomatis dapat <strong>78</strong> (+3 pt pembeda) agar prestasinya tetap dihargai lebih tinggi!
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 text-slate-700 dark:text-slate-300">
+                <p>
+                  <strong>Teacher Dilemma:</strong> <em>"When raw scores are very low (e.g. 30), standard linear scaling can inflate high scores (e.g. 90 becomes 95-97), compressing the grade spread. How do I fix this?"</em>
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 font-medium">
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-800/80">
+                    <span className="font-bold text-purple-900 dark:text-purple-300 block mb-1">
+                      1. Lock Passing Scores (Top Recommendation)
+                    </span>
+                    Select <strong>"Lock Passing Scores"</strong> in the High-Score Protection panel. A raw score of 90 stays 90, and only failing grades are elevated.
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-200 dark:border-purple-800/80">
+                    <span className="font-bold text-purple-900 dark:text-purple-300 block mb-1">
+                      2. Final Converted Score Floor
+                    </span>
+                    Turn on the <strong>"Final Score Floor"</strong> to clamp the lowest possible grade on report cards (e.g. 65), guaranteeing school compliance without skewing top achievers.
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 

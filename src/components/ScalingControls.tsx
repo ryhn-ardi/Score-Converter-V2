@@ -10,8 +10,21 @@ import {
   Sparkles,
   SlidersHorizontal,
   Target,
+  ShieldCheck,
+  ArrowDownToLine,
+  Lock,
+  Info,
+  GitMerge,
+  Layers,
 } from 'lucide-react';
-import { RoundingMode, ScalingConfig, ScalingMethod, MaxSourceMode, MinSourceMode } from '../types';
+import {
+  RoundingMode,
+  ScalingConfig,
+  ScalingMethod,
+  MaxSourceMode,
+  MinSourceMode,
+  TopScoreProtectionMode,
+} from '../types';
 import { computeScaledValue } from '../utils/gradeCalculations';
 import { Language, translations } from '../utils/translations';
 
@@ -92,7 +105,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
           {t.selectEngine}
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Method A: Linear */}
           <button
             id="method-btn-linear"
@@ -180,6 +193,36 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
             </div>
             <div className="mt-3 pt-2 border-t border-indigo-100 dark:border-indigo-900/50 font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">
               {t.methodC_formula}
+            </div>
+          </button>
+
+          {/* Method D: Cascading Chain Rules (x, b, y, c, z) */}
+          <button
+            id="method-btn-cascading-chain"
+            type="button"
+            onClick={() => updateConfig({ method: 'cascading-chain' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              config.method === 'cascading-chain'
+                ? 'border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/50 ring-2 ring-blue-500/25'
+                : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/40 dark:bg-slate-800/40'
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                  Method D
+                </span>
+                <GitMerge className="w-4 h-4 text-blue-500" />
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                {t.methodE_name}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                {t.methodE_desc}
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-blue-100 dark:border-blue-900/50 font-mono text-[11px] text-blue-600 dark:text-blue-400 truncate">
+              {t.methodE_formula}
             </div>
           </button>
         </div>
@@ -564,6 +607,765 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
             </div>
           </div>
         )}
+
+        {/* METHOD D: CASCADING CHAIN RULES (x, b, y, c, z) */}
+        {config.method === 'cascading-chain' && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <GitMerge className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                {t.paramCascadeTitle}
+              </span>
+              <span className="text-xs font-mono text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-md border border-blue-200 dark:border-blue-800">
+                Formula: a &lt; x → b | a = x → b + y | a = c → c + z
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              {t.paramCascadeDesc}
+            </p>
+
+            {/* Visual Interactive Chain Diagram */}
+            <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/80 space-y-2.5">
+              <span className="text-[11px] font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5 uppercase tracking-wide">
+                <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                {t.cascadeRuleSummary}
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs font-mono">
+                {/* Step 1 */}
+                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-sans font-semibold">
+                    1. Siswa Remedial (a &lt; x)
+                  </div>
+                  <div className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                    Nilai Asli &lt; {config.cascadeX}
+                  </div>
+                  <div className="mt-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                    → Menjadi {config.cascadeB}
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 shadow-2xs ring-1 ring-blue-400/40">
+                  <div className="text-[10px] text-blue-700 dark:text-blue-300 font-sans font-semibold">
+                    2. Pas Ambang Batas (a = x)
+                  </div>
+                  <div className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                    Nilai Asli = {config.cascadeX}
+                  </div>
+                  <div className="mt-1 text-blue-700 dark:text-blue-300 font-bold">
+                    → {config.cascadeB} + {config.cascadeY} = {config.cascadeB + config.cascadeY}
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 shadow-2xs ring-1 ring-purple-400/40">
+                  <div className="text-[10px] text-purple-700 dark:text-purple-300 font-sans font-semibold">
+                    3. Ambang Lanjutan (a = c)
+                  </div>
+                  <div className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                    Nilai Asli = {config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY)}
+                  </div>
+                  <div className="mt-1 text-purple-700 dark:text-purple-300 font-bold">
+                    → {(config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY))} + {config.cascadeZ} = {(config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY)) + config.cascadeZ}
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-sans font-semibold">
+                    4. Nilai Tinggi (a &gt; c)
+                  </div>
+                  <div className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                    Nilai &gt; {(config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY))} s.d 100
+                  </div>
+                  <div className="mt-1 text-indigo-600 dark:text-indigo-400 font-bold">
+                    → Melandai Aman (90+ = +0)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Variable Controls: x, b, y, c, z */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+              {/* x: Ambang Batas 1 */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {t.cascadeXLabel}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="slider-cascade-x"
+                    type="range"
+                    min="50"
+                    max="90"
+                    value={config.cascadeX}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      updateConfig({ cascadeX: val, kkm: val });
+                    }}
+                    className="flex-1 accent-blue-600 cursor-pointer"
+                  />
+                  <input
+                    id="input-cascade-x"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={config.cascadeX}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      updateConfig({ cascadeX: val, kkm: val });
+                    }}
+                    className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {t.cascadeXHint}
+                </p>
+              </div>
+
+              {/* b: Nilai Konversi untuk a < x */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {t.cascadeBLabel}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="slider-cascade-b"
+                    type="range"
+                    min="50"
+                    max="90"
+                    value={config.cascadeB}
+                    onChange={(e) => updateConfig({ cascadeB: Number(e.target.value) })}
+                    className="flex-1 accent-blue-600 cursor-pointer"
+                  />
+                  <input
+                    id="input-cascade-b"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={config.cascadeB}
+                    onChange={(e) => updateConfig({ cascadeB: Number(e.target.value) })}
+                    className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {t.cascadeBHint}
+                </p>
+              </div>
+
+              {/* y: Bonus Tambahan untuk a = x */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {t.cascadeYLabel}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="slider-cascade-y"
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={config.cascadeY}
+                    onChange={(e) => updateConfig({ cascadeY: Number(e.target.value) })}
+                    className="flex-1 accent-blue-600 cursor-pointer"
+                  />
+                  <input
+                    id="input-cascade-y"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={config.cascadeY}
+                    onChange={(e) => updateConfig({ cascadeY: Number(e.target.value) })}
+                    className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {t.cascadeYHint
+                    .replace('{b}', String(config.cascadeB))
+                    .replace('{y}', String(config.cascadeY))
+                    .replace('{res}', String(config.cascadeB + config.cascadeY))}
+                </p>
+              </div>
+
+              {/* c: Ambang Batas 2 */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {t.cascadeCLabel}
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer select-none">
+                    <input
+                      id="checkbox-cascade-custom-c"
+                      type="checkbox"
+                      checked={config.cascadeCustomC}
+                      onChange={(e) => updateConfig({ cascadeCustomC: e.target.checked })}
+                      className="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Custom</span>
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    id="slider-cascade-c"
+                    type="range"
+                    min="60"
+                    max="95"
+                    disabled={!config.cascadeCustomC}
+                    value={config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY)}
+                    onChange={(e) => updateConfig({ cascadeC: Number(e.target.value) })}
+                    className="flex-1 accent-blue-600 cursor-pointer disabled:opacity-50"
+                  />
+                  <input
+                    id="input-cascade-c"
+                    type="number"
+                    min="0"
+                    max="100"
+                    disabled={!config.cascadeCustomC}
+                    value={config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY)}
+                    onChange={(e) => updateConfig({ cascadeC: Number(e.target.value) })}
+                    className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white disabled:opacity-50"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {t.cascadeCHint.replace('{val}', String(config.cascadeB + config.cascadeY))}
+                </p>
+              </div>
+
+              {/* z: Bonus Tambahan untuk a = c */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {t.cascadeZLabel}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="slider-cascade-z"
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={config.cascadeZ}
+                    onChange={(e) => updateConfig({ cascadeZ: Number(e.target.value) })}
+                    className="flex-1 accent-blue-600 cursor-pointer"
+                  />
+                  <input
+                    id="input-cascade-z"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={config.cascadeZ}
+                    onChange={(e) => updateConfig({ cascadeZ: Number(e.target.value) })}
+                    className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {t.cascadeZHint
+                    .replace('{c}', String(config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY)))
+                    .replace('{z}', String(config.cascadeZ))
+                    .replace('{res}', String((config.cascadeCustomC ? config.cascadeC : (config.cascadeB + config.cascadeY)) + config.cascadeZ))}
+                </p>
+              </div>
+
+              {/* Gaya Transisi Antara Jenjang */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {t.cascadeTransitionLabel}
+                </label>
+                <div className="space-y-1.5 pt-0.5">
+                  <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cascadeTransition"
+                      checked={config.cascadeTransition === 'smooth'}
+                      onChange={() => updateConfig({ cascadeTransition: 'smooth' })}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>{t.cascadeTransitionSmooth}</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cascadeTransition"
+                      checked={config.cascadeTransition === 'step'}
+                      onChange={() => updateConfig({ cascadeTransition: 'step' })}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>{t.cascadeTransitionStep}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SCHOOL POLICY & GRADE PROTECTION (Floor & Anti-Inflation) */}
+      <div className="bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-slate-50 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-800/40 p-4 sm:p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/60 space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-xs shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                {t.minScaledFloorTitle} & {t.topScoreProtectionTitle}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                {language === 'id'
+                  ? 'Solusi kebijakan sekolah: tentukan nilai batas bawah rapor dan cegah nilai tinggi (90+) melonjak ke 97-100 saat mendongkrak nilai anjlok (30).'
+                  : 'School policy solutions: set report card floor and protect top grades (90+) from runaway inflation when boosting failing grades (30).'}
+              </p>
+            </div>
+          </div>
+
+          {/* Active Status Badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            {config.minScaledFloorEnabled && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                <ArrowDownToLine className="w-3 h-3" />
+                Floor: {config.minScaledFloor}
+              </span>
+            )}
+            {config.meritGapEnabled && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700">
+                <CheckCircle2 className="w-3 h-3" />
+                Merit Gap: +{config.meritGap} pt
+              </span>
+            )}
+            {config.topScoreProtection !== 'none' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700">
+                <Lock className="w-3 h-3" />
+                {config.topScoreProtection === 'lock-kkm' ? 'Lock ≥ KKM' : 'Damped Boost'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
+          {/* 1. BATAS BAWAH NILAI AKHIR (FLOOR NILAI RAPOR) */}
+          <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/80 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  id="checkbox-enable-min-floor"
+                  type="checkbox"
+                  checked={config.minScaledFloorEnabled}
+                  onChange={(e) => updateConfig({ minScaledFloorEnabled: e.target.checked })}
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600"
+                />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <ArrowDownToLine className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  {t.minScaledFloorToggle}
+                </span>
+              </label>
+
+              {config.minScaledFloorEnabled && (
+                <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  Min: {config.minScaledFloor}
+                </span>
+              )}
+            </div>
+
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              {t.minScaledFloorDesc}
+            </p>
+
+            {config.minScaledFloorEnabled ? (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center gap-3">
+                  <input
+                    id="slider-min-scaled-floor"
+                    type="range"
+                    min="30"
+                    max={config.kkm}
+                    step="1"
+                    value={config.minScaledFloor}
+                    onChange={(e) => updateConfig({ minScaledFloor: Number(e.target.value) })}
+                    className="flex-1 accent-indigo-600 cursor-pointer"
+                  />
+                  <input
+                    id="input-min-scaled-floor"
+                    type="number"
+                    min="0"
+                    max={config.kkm}
+                    value={config.minScaledFloor}
+                    onChange={(e) => updateConfig({ minScaledFloor: Number(e.target.value) || 0 })}
+                    className="w-18 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
+                  />
+                </div>
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    {language === 'id'
+                      ? `Siswa dengan nilai serendah apapun (misal 30) tidak akan mendapat nilai di bawah ${config.minScaledFloor} di rapor.`
+                      : `No student with low raw scores (e.g. 30) will receive below ${config.minScaledFloor} on report card.`}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-[11px] text-slate-400 italic">
+                {language === 'id'
+                  ? 'Batas bawah dimatikan (nilai akhir mengikuti kalkulasi matematis murni).'
+                  : 'Floor clamp disabled (final scores follow raw calculation output).'}
+              </div>
+            )}
+          </div>
+
+          {/* 2. PERLINDUNGAN NILAI TINGGI (ANTI-INFLASI 90+) */}
+          <div className="p-3.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/80 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                {t.topScoreProtectionTitle}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+                Anti-Inflasi
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              {t.topScoreProtectionDesc}
+            </p>
+
+            <div className="space-y-2">
+              {/* Option A: None (Standard) */}
+              <label
+                className={`flex items-start gap-2.5 p-2 rounded-lg border text-xs cursor-pointer transition ${
+                  config.topScoreProtection === 'none'
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 font-medium'
+                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="topScoreProtection"
+                  checked={config.topScoreProtection === 'none'}
+                  onChange={() => updateConfig({ topScoreProtection: 'none' })}
+                  className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                />
+                <div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {t.topScoreModeNone}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {t.topScoreModeNoneDesc}
+                  </div>
+                </div>
+              </label>
+
+              {/* Option B: Lock Passing (Recommended) */}
+              <label
+                className={`flex items-start gap-2.5 p-2 rounded-lg border text-xs cursor-pointer transition ${
+                  config.topScoreProtection === 'lock-kkm'
+                    ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/50 font-medium ring-1 ring-purple-400/40'
+                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="topScoreProtection"
+                  checked={config.topScoreProtection === 'lock-kkm'}
+                  onChange={() => updateConfig({ topScoreProtection: 'lock-kkm' })}
+                  className="mt-0.5 text-purple-600 focus:ring-purple-500"
+                />
+                <div>
+                  <div className="font-semibold text-purple-950 dark:text-purple-200 flex items-center gap-1.5">
+                    {t.topScoreModeLock}
+                    <span className="text-[10px] font-bold bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 px-1.5 py-0.2 rounded">
+                      Rekomendasi
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-purple-800/80 dark:text-purple-300/80">
+                    {t.topScoreModeLockDesc}
+                  </div>
+                </div>
+              </label>
+
+              {/* Option C: Damped Boost */}
+              <label
+                className={`flex items-start gap-2.5 p-2 rounded-lg border text-xs cursor-pointer transition ${
+                  config.topScoreProtection === 'damped'
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 font-medium'
+                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="topScoreProtection"
+                  checked={config.topScoreProtection === 'damped'}
+                  onChange={() => updateConfig({ topScoreProtection: 'damped' })}
+                  className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                />
+                <div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {t.topScoreModeDamped}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {t.topScoreModeDampedDesc}
+                  </div>
+                </div>
+              </label>
+
+              {/* DAMPED BOOST CUSTOM THRESHOLDS (Jika mode Teredam aktif) */}
+              {config.topScoreProtection === 'damped' && (
+                <div className="mt-2 p-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                      <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      {t.dampedSettingsTitle}
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-indigo-200/80 dark:bg-indigo-900 text-indigo-950 dark:text-indigo-200 px-1.5 py-0.5 rounded">
+                      ≥ {config.dampedFreezeThreshold} = +0 Poin
+                    </span>
+                  </div>
+
+                  {/* 1. Freeze Threshold (Kunci Nol Kenaikan) */}
+                  <div className="space-y-1 bg-white/70 dark:bg-slate-900/70 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                    <div className="flex justify-between items-center text-xs">
+                      <label className="font-semibold text-slate-800 dark:text-slate-200">
+                        {t.dampedFreezeLabel}
+                      </label>
+                      <input
+                        type="number"
+                        min="80"
+                        max="100"
+                        value={config.dampedFreezeThreshold ?? 90}
+                        onChange={(e) =>
+                          updateConfig({
+                            dampedFreezeThreshold: Math.min(100, Math.max(70, Number(e.target.value) || 90)),
+                          })
+                        }
+                        className="w-16 text-center font-mono font-bold text-xs py-0.5 px-1.5 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <input
+                      type="range"
+                      min="80"
+                      max="98"
+                      value={config.dampedFreezeThreshold ?? 90}
+                      onChange={(e) => updateConfig({ dampedFreezeThreshold: Number(e.target.value) })}
+                      className="w-full accent-indigo-600 cursor-pointer h-1.5"
+                    />
+                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-medium">
+                      ✓ {t.dampedFreezeHint}
+                    </p>
+                  </div>
+
+                  {/* 2. Titik Mulai Redaman (dampedStart) & Max Boost */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="bg-white/70 dark:bg-slate-900/70 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50 space-y-1">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          {t.dampedStartLabel}
+                        </span>
+                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                          {config.dampedStart ?? 75}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="50"
+                        max={(config.dampedFreezeThreshold ?? 90) - 2}
+                        value={config.dampedStart ?? 75}
+                        onChange={(e) => updateConfig({ dampedStart: Number(e.target.value) })}
+                        className="w-full accent-indigo-600 cursor-pointer h-1.5"
+                      />
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">
+                        {t.dampedStartHint}
+                      </p>
+                    </div>
+
+                    <div className="bg-white/70 dark:bg-slate-900/70 p-2 rounded-lg border border-indigo-100 dark:border-indigo-900/50 space-y-1">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          {t.dampedMaxBoostLabel}
+                        </span>
+                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                          +{config.dampedMaxBoost ?? 2} pt
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="5"
+                        step="0.5"
+                        value={config.dampedMaxBoost ?? 2}
+                        onChange={(e) => updateConfig({ dampedMaxBoost: Number(e.target.value) })}
+                        className="w-full accent-indigo-600 cursor-pointer h-1.5"
+                      />
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">
+                        {t.dampedMaxBoostHint}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* MINI TEST MATRIX: Menampilkan langsung kenaikan untuk 30, 75, 85, 90, 91, 95 */}
+                  <div className="pt-1">
+                    <div className="text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                      <span>{t.dampedPreviewTitle}:</span>
+                      <span className="text-[9px] font-normal text-indigo-600 dark:text-indigo-400">
+                        (Nilai Asli → Hasil)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-center font-mono text-[11px]">
+                      {[30, 60, config.dampedStart ?? 75, 85, config.dampedFreezeThreshold ?? 90, 95].map(
+                        (val) => {
+                          const res = computeScaledValue(val, config, datasetMin, datasetMax);
+                          const delta = res - val;
+                          const isZero = delta <= 0.05;
+                          return (
+                            <div
+                              key={val}
+                              className={`p-1 rounded-md border text-[10px] ${
+                                isZero
+                                  ? 'bg-purple-100/80 dark:bg-purple-950/80 border-purple-300 dark:border-purple-700 font-bold'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                              }`}
+                            >
+                              <div className="text-slate-500 dark:text-slate-400 text-[9px]">
+                                Asli: {val}
+                              </div>
+                              <div className="font-bold text-slate-900 dark:text-white">
+                                {res.toFixed(config.decimals)}
+                              </div>
+                              <div
+                                className={`text-[9px] font-bold ${
+                                  isZero
+                                    ? 'text-purple-700 dark:text-purple-300'
+                                    : 'text-emerald-600 dark:text-emerald-400'
+                                }`}
+                              >
+                                {isZero ? 'Terkunci (+0)' : `+${delta.toFixed(1)}`}
+                              </div>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 3. PEMBEDA SISWA TUNTAS (MERIT GAP) - Solusi Kasus Nilai Khusus */}
+        <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/80 space-y-3 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                id="checkbox-merit-gap"
+                type="checkbox"
+                checked={config.meritGapEnabled}
+                onChange={(e) => updateConfig({ meritGapEnabled: e.target.checked })}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-600"
+              />
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                {t.meritGapToggle}
+              </span>
+            </label>
+
+            {config.meritGapEnabled && (
+              <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+                Pembeda: +{config.meritGap} Poin
+              </span>
+            )}
+          </div>
+
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            {t.meritGapHint
+              .replace('{kkm}', String(config.kkm))
+              .replace('{val}', String(config.kkm + config.meritGap))}
+          </p>
+
+          {config.meritGapEnabled && (
+            <div className="space-y-2 pt-1 border-t border-blue-200/60 dark:border-blue-800/60">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {t.meritGapLabel}:
+                </span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={config.meritGap}
+                    onChange={(e) => updateConfig({ meritGap: Number(e.target.value) || 1 })}
+                    className="w-28 sm:w-40 accent-blue-600 cursor-pointer h-1.5"
+                  />
+                  <span className="font-mono font-bold text-xs bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300">
+                    +{config.meritGap} pt
+                  </span>
+                </div>
+              </div>
+
+              {/* Visual Comparison Box */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-[11px] font-mono pt-1">
+                <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-blue-200 dark:border-blue-900">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">Siswa Anjlok (Asli 30)</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">
+                    Hasil: {computeScaledValue(30, config, datasetMin, datasetMax).toFixed(config.decimals)}
+                  </div>
+                  <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Terangkat ke Batas Minimum</div>
+                </div>
+
+                <div className="p-2 rounded-lg bg-blue-100/80 dark:bg-blue-950/80 border border-blue-300 dark:border-blue-700 ring-1 ring-blue-400/50">
+                  <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold">Siswa Tuntas (Asli {config.kkm})</div>
+                  <div className="text-sm font-extrabold text-blue-900 dark:text-blue-200">
+                    Hasil: {computeScaledValue(config.kkm, config, datasetMin, datasetMax).toFixed(config.decimals)}
+                  </div>
+                  <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    ✓ Lebih Tinggi (+{config.meritGap} pt)
+                  </div>
+                </div>
+
+                <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-blue-200 dark:border-blue-900">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">Siswa Tinggi (Asli 90)</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200">
+                    Hasil: {computeScaledValue(90, config, datasetMin, datasetMax).toFixed(config.decimals)}
+                  </div>
+                  <div className="text-[9px] text-purple-600 dark:text-purple-400 font-bold">Terkendali / Realistis</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 4. OPTIONAL MAX DELTA (POINT BOOST) CAP */}
+        <div className="p-3 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              id="checkbox-max-delta-cap"
+              type="checkbox"
+              checked={config.maxDeltaCapEnabled}
+              onChange={(e) => updateConfig({ maxDeltaCapEnabled: e.target.checked })}
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600"
+            />
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              {t.maxDeltaCapToggle}
+            </span>
+            <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+              ({t.maxDeltaCapHint})
+            </span>
+          </label>
+
+          {config.maxDeltaCapEnabled && (
+            <div className="flex items-center gap-2">
+              <span className="text-slate-600 dark:text-slate-400 text-xs">Maksimal +Poin:</span>
+              <input
+                id="input-max-delta-cap"
+                type="number"
+                min="1"
+                max="50"
+                value={config.maxDeltaCap}
+                onChange={(e) => updateConfig({ maxDeltaCap: Number(e.target.value) || 1 })}
+                className="w-16 text-center font-mono font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ROUNDING & LIVE SIMULATOR BAR */}
@@ -650,9 +1452,35 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                 onChange={(e) => setTestScore(Number(e.target.value))}
                 className="w-full accent-indigo-600 cursor-pointer"
               />
+              {/* Quick Preset Buttons for Common Cases (e.g. 30, 90) */}
+              <div className="flex items-center gap-1.5 mt-2">
+                <span className="text-[10px] text-slate-400 font-medium">Uji Cepat:</span>
+                {[
+                  { label: '30 (Anjlok)', val: 30 },
+                  { label: '55', val: 55 },
+                  { label: `${config.kkm} (KKM)`, val: config.kkm },
+                  { label: '85', val: 85 },
+                  { label: '90 (Tinggi)', val: 90 },
+                  { label: '91 (Kunci)', val: 91 },
+                  { label: '95', val: 95 },
+                ].map((preset) => (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => setTestScore(preset.val)}
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-mono transition cursor-pointer ${
+                      testScore === preset.val
+                        ? 'bg-indigo-600 text-white font-bold shadow-2xs'
+                        : 'bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-indigo-950 border border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="text-center px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 shadow-xs min-w-24">
+            <div className="text-center px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 shadow-xs min-w-24 shrink-0">
               <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
                 {t.convertedResultLabel}
               </div>
@@ -661,6 +1489,9 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
               </div>
               <div className={`text-[10px] font-semibold ${testConverted >= config.kkm ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {testConverted >= config.kkm ? t.statusPassed : t.statusFailed}
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                {testConverted - testScore >= 0 ? `+${(testConverted - testScore).toFixed(config.decimals)}` : `${(testConverted - testScore).toFixed(config.decimals)}`}
               </div>
             </div>
           </div>

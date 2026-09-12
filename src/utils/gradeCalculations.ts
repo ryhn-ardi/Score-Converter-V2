@@ -29,10 +29,53 @@ export function computeScaledValue(
     const yMin = config.targetMin;
     const yMax = config.targetMax;
 
-    if (xMax === xMin) {
-      computed = yMin;
+    if (config.meritGapEnabled && (config.meritGap ?? 0) > 0 && raw >= config.kkm) {
+      // PERLINDUNGAN PEMBEDA SISWA TUNTAS (MERIT GAP):
+      // Siswa yang nilai aslinya >= KKM (misal 75) PASTI LEBIH TINGGI daripada siswa nilai anjlok yang diangkat ke KKM
+      const kkm = config.kkm;
+      const gap = config.meritGap;
+      const freeze = Math.max(kkm + gap + 1, config.dampedFreezeThreshold ?? 90);
+
+      if (raw >= freeze) {
+        // Nilai tinggi (>= 90) terlindungi: tetap nilai aslinya
+        computed = raw;
+      } else {
+        // Di titik raw = kkm, nilai mulai dari kkm + gap (misal 75 + 3 = 78)
+        // lalu melandai mulus menuju freeze (90)
+        const t = (raw - kkm) / Math.max(1, freeze - kkm);
+        const baseMin = kkm + gap;
+        computed = baseMin + t * (freeze - baseMin);
+      }
+    } else if (config.topScoreProtection === 'lock-kkm' && raw >= config.kkm) {
+      // Siswa yang sudah tuntas KKM (misal 90) terlindungi: tetap nilai aslinya, tidak diinflasi
+      computed = raw;
+    } else if (config.topScoreProtection === 'damped') {
+      const start = Math.min(config.dampedStart ?? config.kkm, config.dampedFreezeThreshold ?? 90);
+      const freeze = Math.max(start + 1, config.dampedFreezeThreshold ?? 90);
+      const maxBoost = config.dampedMaxBoost ?? 2;
+
+      if (raw >= freeze) {
+        // PERLINDUNGAN MUTLAK: Nilai >= batas beku (misal 90, 91, 95) SAMA SEKALI TIDAK NAIK (+0)
+        computed = raw;
+      } else if (raw >= start) {
+        // Zona redaman transisi (misal 75 s.d 89): kenaikan dibatasi dan melandai ke 0 di angka freeze
+        const standardLinear =
+          xMax === xMin ? yMin : yMin + ((raw - xMin) * (yMax - yMin)) / (xMax - xMin);
+        const rawGain = Math.max(0, standardLinear - raw);
+        const t = (freeze - raw) / (freeze - start); // 1 di start -> 0 di freeze
+        const allowedBoost = Math.min(rawGain, maxBoost * Math.pow(t, 1.2));
+        computed = raw + allowedBoost;
+      } else {
+        // Nilai di bawah threshold mulai (misal 30) didongkrak penuh sesuai skala linier
+        computed =
+          xMax === xMin ? yMin : yMin + ((raw - xMin) * (yMax - yMin)) / (xMax - xMin);
+      }
     } else {
-      computed = yMin + ((raw - xMin) * (yMax - yMin)) / (xMax - xMin);
+      if (xMax === xMin) {
+        computed = yMin;
+      } else {
+        computed = yMin + ((raw - xMin) * (yMax - yMin)) / (xMax - xMin);
+      }
     }
   } else if (config.method === 'sqrt') {
     // Square Root Curve: y = sqrt(x) * multiplier, capped at maxCap
@@ -53,8 +96,43 @@ export function computeScaledValue(
         computed = targetMin + ((raw - xMin) * (kkm - targetMin)) / Math.max(0.0001, (kkm - xMin));
       }
     } else {
-      if (config.kkmScaleAbove) {
-        // Smoothly scale from [kkm, xMax] to [kkm, targetMax] to preserve grade rank and prevent ties
+      if (config.meritGapEnabled && (config.meritGap ?? 0) > 0) {
+        // PERLINDUNGAN PEMBEDA SISWA TUNTAS (MERIT GAP):
+        // Siswa yang nilai aslinya >= KKM diangkat lebih tinggi dari batas KKM
+        const gap = config.meritGap;
+        const freeze = Math.max(kkm + gap + 1, config.dampedFreezeThreshold ?? 90);
+
+        if (raw >= freeze) {
+          computed = raw;
+        } else {
+          const t = (raw - kkm) / Math.max(1, freeze - kkm);
+          const baseMin = kkm + gap;
+          computed = baseMin + t * (freeze - baseMin);
+        }
+      } else if (config.topScoreProtection === 'lock-kkm') {
+        // Locked: scores >= KKM remain original
+        computed = raw;
+      } else if (config.topScoreProtection === 'damped') {
+        const start = Math.min(config.dampedStart ?? kkm, config.dampedFreezeThreshold ?? 90);
+        const freeze = Math.max(start + 1, config.dampedFreezeThreshold ?? 90);
+        const maxBoost = config.dampedMaxBoost ?? 2;
+
+        if (raw >= freeze) {
+          computed = raw;
+        } else if (raw >= start) {
+          const standardAbove =
+            xMax <= kkm
+              ? raw
+              : kkm + ((raw - kkm) * (targetMax - kkm)) / Math.max(0.0001, (xMax - kkm));
+          const rawGain = Math.max(0, standardAbove - raw);
+          const t = (freeze - raw) / (freeze - start);
+          const allowedBoost = Math.min(rawGain, maxBoost * Math.pow(t, 1.2));
+          computed = raw + allowedBoost;
+        } else {
+          computed = raw;
+        }
+      } else if (config.kkmScaleAbove) {
+        // Smoothly scale from [kkm, xMax] to [kkm, targetMax]
         if (xMax <= kkm) {
           computed = raw;
         } else {
@@ -67,10 +145,73 @@ export function computeScaledValue(
     }
   } else if (config.method === 'constant-add') {
     computed = raw + config.constantAdd;
+  } else if (config.method === 'cascading-chain') {
+    // ATURAN BERJENJANG KUSTOM (CASCADING CHAIN RULE):
+    // 1. Jika nilai a < x, maka menjadi b
+    // 2. Jika nilai b == x (atau pas titik x), maka b ditambah y (menjadi b + y)
+    // 3. Jika nilai c == b + y (atau titik c), maka c ditambah z (menjadi c + z)
+    // Semua variabel x, b, y, c, z dapat di-custom oleh pengguna.
+    const x = config.cascadeX ?? config.kkm;
+    const b = config.cascadeB ?? config.kkm;
+    const y = config.cascadeY ?? 3;
+    const c = config.cascadeCustomC ? (config.cascadeC ?? (b + y)) : (b + y);
+    const z = config.cascadeZ ?? 2;
+    const transition = config.cascadeTransition ?? 'smooth';
+    const freeze = Math.max(c + z + 1, config.dampedFreezeThreshold ?? 90);
+
+    if (raw < x) {
+      // Level 1: Di bawah nilai x -> menjadi b
+      computed = b;
+    } else if (raw >= x && raw < c) {
+      // Level 2: Nilai pas x atau antara x dan c
+      if (transition === 'step') {
+        computed = raw === x ? (b + y) : (raw + y);
+      } else {
+        // Mulus interpolasi dari (b + y) di titik x menuju (c + z) di titik c
+        if (c <= x) {
+          computed = b + y;
+        } else {
+          const t = (raw - x) / (c - x);
+          const valStart = b + y;
+          const valEnd = c + z;
+          computed = valStart + t * (valEnd - valStart);
+        }
+      }
+    } else {
+      // Level 3: Nilai c ke atas (raw >= c) -> c ditambah z
+      if (transition === 'step') {
+        computed = Math.min(config.maxCap, raw + z);
+      } else {
+        // Pada titik c: nilainya pas c + z.
+        // Untuk raw >= freeze (misal 90): nilai terkunci aman pada nilai asli (tidak melonjak liar)
+        if (raw >= freeze) {
+          computed = raw;
+        } else {
+          const t = (raw - c) / Math.max(1, freeze - c);
+          const valStart = c + z;
+          computed = valStart + t * (freeze - valStart);
+        }
+      }
+    }
   }
 
-  // Ensure within reasonable bounds [0, maxCap]
-  computed = Math.max(0, Math.min(config.maxCap, computed));
+  // Batas Maksimal Kenaikan Nilai (Max Delta Cap, jika aktif)
+  if (config.maxDeltaCapEnabled && config.maxDeltaCap > 0) {
+    if (computed - raw > config.maxDeltaCap) {
+      computed = raw + config.maxDeltaCap;
+    }
+  }
+
+  // Batas Atas Nilai (maxCap, default 100)
+  computed = Math.min(config.maxCap, computed);
+
+  // Batas Bawah / Minimum Nilai Akhir Konversi (Floor / minScaledFloor)
+  if (config.minScaledFloorEnabled) {
+    computed = Math.max(config.minScaledFloor, computed);
+  } else {
+    computed = Math.max(0, computed);
+  }
+
   return roundScore(computed, config.decimals, config.roundingMode);
 }
 
