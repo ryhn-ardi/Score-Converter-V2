@@ -124,8 +124,8 @@ export default function App() {
 
   // Dataset min and max
   const { datasetMin, datasetMax } = useMemo(() => {
-    if (students.length === 0) return { datasetMin: 0, datasetMax: 100 };
-    const rawScores = students.map((s) => s.rawScore);
+    if (students.length === 0) return { datasetMin: 0, datasetMax: 0 };
+    const rawScores = students.map((s) => Number(s.rawScore) || 0);
     return {
       datasetMin: Math.min(...rawScores),
       datasetMax: Math.max(...rawScores),
@@ -269,6 +269,8 @@ export default function App() {
           <DataInputSection
             onLoadStudents={handleLoadStudents}
             currentCount={students.length}
+            currentMax={datasetMax}
+            currentMin={datasetMin}
             language={language}
           />
         </div>

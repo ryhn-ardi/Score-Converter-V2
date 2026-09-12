@@ -197,17 +197,36 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                 {t.maxSourceTitle}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Tentukan apakah batas atas acuan (x_max) diambil dari nilai tertinggi siswa atau standar ujian kustom.
+                {language === 'id'
+                  ? 'Tentukan batas atas acuan (x_max): diambil dari nilai tertinggi data siswa atau batas kustom guru.'
+                  : 'Set reference upper bound (x_max): from highest student score or custom maximum standard.'}
               </p>
             </div>
           </div>
 
-          {/* Auto-detected maximum badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 shadow-xs self-start sm:self-auto">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {t.detectedMaxBadge.replace('{val}', String(datasetMax))}
-            </span>
+          {/* Badges showing BOTH detected dataset max AND the active x_max being used */}
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {/* Auto-detected maximum badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                {t.detectedMaxBadge.replace('{val}', String(datasetMax))}
+              </span>
+            </div>
+
+            {/* Active Maximum in use badge */}
+            <div
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-xs ${
+                config.maxSourceMode === 'custom'
+                  ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200'
+                  : 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="text-xs font-bold font-mono">
+                {t.activeMaxBadge.replace('{val}', String(activeMax))}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -239,7 +258,9 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Nilai tertinggi yang diperoleh siswa di kelas ({datasetMax}) otomatis menjadi patokan atas.
+                {language === 'id'
+                  ? `Nilai tertinggi yang diperoleh siswa di kelas (${datasetMax}) otomatis menjadi patokan atas.`
+                  : `Highest student score in dataset (${datasetMax}) automatically used as upper bound.`}
               </p>
             </div>
           </label>
@@ -272,29 +293,39 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                     type="number"
                     min="1"
                     max="1000"
-                    value={config.customXMax}
-                    onChange={(e) =>
+                    step="any"
+                    value={config.customXMax ?? 100}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const parsed = parseFloat(val);
                       updateConfig({
                         maxSourceMode: 'custom',
-                        customXMax: Number(e.target.value) || 100,
-                      })
-                    }
-                    className="w-16 text-center text-xs font-bold py-0.5 px-1.5 rounded-md border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        customXMax: val === '' || isNaN(parsed) ? 0 : parsed,
+                      });
+                    }}
+                    className="w-20 text-center text-xs font-bold py-1 px-2 rounded-md border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono shadow-xs"
                   />
                 </div>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {t.customMaxHint} (nilai penuh skala soal sebelum konversi).
+                {t.customMaxHint} {language === 'id' ? '(nilai penuh skala soal ujian).' : '(exam full mark scale).'}
               </p>
             </div>
           </label>
         </div>
 
         {/* Active source summary indicator */}
-        <div className="text-[11px] text-indigo-900/80 dark:text-indigo-300/80 flex items-center gap-1.5 font-mono">
-          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-          <span>
-            Batas atas aktif: <strong>x_max = {activeMax}</strong> ({config.maxSourceMode === 'auto' ? 'Otomatis dari Data' : 'Kustom Guru'}).
+        <div className="text-[11px] text-indigo-900/80 dark:text-indigo-300/80 flex flex-wrap items-center justify-between gap-2 font-mono pt-1">
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>
+              {language === 'id' ? 'Batas atas aktif:' : 'Active upper bound:'}{' '}
+              <strong>x_max = {activeMax}</strong>{' '}
+              ({config.maxSourceMode === 'auto' ? (language === 'id' ? 'Otomatis dari Data' : 'Auto Data') : (language === 'id' ? 'Kustom Guru' : 'Custom Teacher')}).
+            </span>
+          </div>
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+            {language === 'id' ? `Nilai tertinggi di kelas: ${datasetMax}` : `Highest in class: ${datasetMax}`}
           </span>
         </div>
       </div>

@@ -413,10 +413,12 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                         <input
                           type="number"
                           step="any"
+                          autoFocus
                           value={editScore}
                           onChange={(e) => setEditScore(e.target.value)}
+                          onBlur={() => saveEdit(student.id)}
                           onKeyDown={(e) => e.key === 'Enter' && saveEdit(student.id)}
-                          className="w-20 text-right text-xs sm:text-sm px-2 py-1 rounded-lg border border-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                          className="w-20 text-right text-xs sm:text-sm px-2 py-1 rounded-lg border border-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
                         />
                       ) : (
                         <span

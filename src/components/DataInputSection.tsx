@@ -1,4 +1,4 @@
-import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import React, { useState, useRef, useMemo, useEffect, DragEvent, ChangeEvent } from 'react';
 import {
   ClipboardPaste,
   FileSpreadsheet,
@@ -9,6 +9,8 @@ import {
   Info,
   Layers,
   FileUp,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import { StudentRawInput } from '../types';
 import { parsePastedText, parseUploadedFile } from '../utils/fileParser';
@@ -17,18 +19,22 @@ import { Language, translations } from '../utils/translations';
 interface DataInputSectionProps {
   onLoadStudents: (newStudents: StudentRawInput[], mode: 'replace' | 'append') => void;
   currentCount: number;
+  currentMax?: number;
+  currentMin?: number;
   language: Language;
 }
 
 export const DataInputSection: React.FC<DataInputSectionProps> = ({
   onLoadStudents,
   currentCount,
+  currentMax = 0,
+  currentMin = 0,
   language,
 }) => {
   const t = translations[language];
   const [activeTab, setActiveTab] = useState<'paste' | 'upload' | 'quick-add'>('paste');
   const [pastedText, setPastedText] = useState('');
-  const [detectedCount, setDetectedCount] = useState<number | null>(null);
+  const [autoSync, setAutoSync] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -40,16 +46,32 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Analyze pasted text in real time
-  const handlePastedTextChange = (text: string) => {
-    setPastedText(text);
-    if (!text.trim()) {
-      setDetectedCount(null);
-      return;
-    }
-    const detected = parsePastedText(text);
-    setDetectedCount(detected.length);
-  };
+  // Parse pasted text in real time on EVERY keystroke
+  const liveParsed = useMemo(() => {
+    if (!pastedText.trim()) return [];
+    return parsePastedText(pastedText);
+  }, [pastedText]);
+
+  const liveMax = useMemo(() => {
+    if (liveParsed.length === 0) return null;
+    return Math.max(...liveParsed.map((s) => s.rawScore));
+  }, [liveParsed]);
+
+  const liveMin = useMemo(() => {
+    if (liveParsed.length === 0) return null;
+    return Math.min(...liveParsed.map((s) => s.rawScore));
+  }, [liveParsed]);
+
+  // Debounced auto-sync to application state when user types into the textarea
+  useEffect(() => {
+    if (!autoSync || liveParsed.length === 0) return;
+
+    const timer = setTimeout(() => {
+      onLoadStudents(liveParsed, 'replace');
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [pastedText, autoSync]);
 
   const applyPastedData = (mode: 'replace' | 'append') => {
     if (!pastedText.trim()) return;
@@ -59,10 +81,16 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
       return;
     }
     onLoadStudents(students, mode);
-    setPastedText('');
-    setDetectedCount(null);
+    if (mode === 'replace') {
+      // Keep text or clear based on user flow; keep text visible so they can edit
+    }
     setUploadError(null);
-    setUploadSuccess(t.msgLoadedSuccess.replace('{count}', String(students.length)));
+    const newMax = Math.max(...students.map((s) => s.rawScore));
+    setUploadSuccess(
+      language === 'id'
+        ? `Berhasil memuat ${students.length} siswa! Nilai maksimal terbaca: ${newMax}`
+        : `Successfully loaded ${students.length} students! Detected max score: ${newMax}`
+    );
     setTimeout(() => setUploadSuccess(null), 4000);
   };
 
@@ -73,8 +101,11 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
     try {
       const students = await parseUploadedFile(file);
       onLoadStudents(students, mode);
+      const newMax = Math.max(...students.map((s) => s.rawScore));
       setUploadSuccess(
-        t.msgImportSuccess.replace('{count}', String(students.length)).replace('{fileName}', file.name)
+        language === 'id'
+          ? `File "${file.name}" berhasil diimpor (${students.length} siswa). Nilai maksimal terbaca: ${newMax}`
+          : `File "${file.name}" imported (${students.length} students). Detected max score: ${newMax}`
       );
       setTimeout(() => setUploadSuccess(null), 4000);
     } catch (err: unknown) {
@@ -125,6 +156,13 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
     onLoadStudents([newStudent], 'append');
     setSingleName('');
     setSingleScore('');
+    const newMax = Math.max(currentMax, score);
+    setUploadSuccess(
+      language === 'id'
+        ? `Siswa ditambahkan dengan nilai ${score}. Nilai maksimal kelas kini: ${newMax}`
+        : `Student added with score ${score}. Current class maximum: ${newMax}`
+    );
+    setTimeout(() => setUploadSuccess(null), 3500);
   };
 
   return (
@@ -203,21 +241,59 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
       {/* TAB 1: Direct Paste / Textarea */}
       {activeTab === 'paste' && (
         <div className="space-y-3">
+          {/* Live Reader & Detection Summary Card */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                {language === 'id' ? 'Pembaca Nilai Maksimal & Data:' : 'Live Score Detector:'}
+              </span>
+
+              {liveParsed.length > 0 ? (
+                <>
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200">
+                    <strong>{liveParsed.length}</strong> {language === 'id' ? 'Siswa' : 'Students'}
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 font-mono font-bold text-emerald-800 dark:text-emerald-300 shadow-2xs">
+                    {t.detectedMaxBadge.replace('{val}', String(liveMax))}
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono text-indigo-700 dark:text-indigo-300">
+                    Min: {liveMin}
+                  </span>
+                </>
+              ) : (
+                <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-slate-600 dark:text-slate-400">
+                  {language === 'id'
+                    ? `Data kelas saat ini: Maksimal = ${currentMax} | Minimal = ${currentMin} (${currentCount} siswa)`
+                    : `Current class data: Max = ${currentMax} | Min = ${currentMin} (${currentCount} students)`}
+                </span>
+              )}
+            </div>
+
+            {/* Live Sync Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+              <input
+                type="checkbox"
+                checked={autoSync}
+                onChange={(e) => setAutoSync(e.target.checked)}
+                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600"
+              />
+              <span className="text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1">
+                <RefreshCw className={`w-3.5 h-3.5 ${autoSync ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                {t.liveSyncLabel}
+              </span>
+            </label>
+          </div>
+
           <div className="relative">
             <textarea
               id="textarea-grades-input"
-              rows={4}
+              rows={5}
               value={pastedText}
-              onChange={(e) => handlePastedTextChange(e.target.value)}
+              onChange={(e) => setPastedText(e.target.value)}
               placeholder={t.textareaPlaceholder}
-              className="w-full font-mono text-xs sm:text-sm p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition"
+              className="w-full font-mono text-xs sm:text-sm p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition leading-relaxed"
             />
-            {detectedCount !== null && (
-              <div className="absolute right-3 bottom-3 text-xs bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 shadow-xs">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t.detectedStudents.replace('{count}', String(detectedCount))}
-              </div>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
@@ -226,7 +302,19 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
               <span>{t.autoDetectNotice}</span>
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex flex-wrap items-center gap-2 ml-auto">
+              {pastedText && (
+                <button
+                  type="button"
+                  onClick={() => setPastedText('')}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition cursor-pointer flex items-center gap-1"
+                  title="Clear textarea"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  {language === 'id' ? 'Bersihkan' : 'Clear'}
+                </button>
+              )}
+
               <button
                 id="btn-append-pasted-data"
                 type="button"
@@ -296,50 +384,62 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
 
       {/* TAB 3: Quick Add */}
       {activeTab === 'quick-add' && (
-        <form onSubmit={handleQuickAdd} className="flex flex-col sm:flex-row items-end gap-3">
-          <div className="w-full sm:flex-1">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {t.quickNameLabel}
-            </label>
-            <input
-              id="input-quick-student-name"
-              type="text"
-              value={singleName}
-              onChange={(e) => setSingleName(e.target.value)}
-              placeholder={`Contoh: Siswa ${currentCount + 1}`}
-              className="w-full text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
-            />
+        <div className="space-y-3">
+          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+            <span>
+              {language === 'id'
+                ? `Nilai maksimal kelas saat ini: ${currentMax}. Menambahkan nilai lebih tinggi akan otomatis menaikkan batas maksimal.`
+                : `Current class maximum: ${currentMax}. Adding a higher score will automatically raise the maximum.`}
+            </span>
           </div>
 
-          <div className="w-full sm:w-36">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {t.quickScoreLabel}
-            </label>
-            <input
-              id="input-quick-student-score"
-              type="number"
-              min="0"
-              max="1000"
-              step="any"
-              value={singleScore}
-              onChange={(e) => setSingleScore(e.target.value)}
-              placeholder="Contoh: 58"
-              required
-              className="w-full text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono"
-            />
-          </div>
+          <form onSubmit={handleQuickAdd} className="flex flex-col sm:flex-row items-end gap-3">
+            <div className="w-full sm:flex-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                {t.quickNameLabel}
+              </label>
+              <input
+                id="input-quick-student-name"
+                type="text"
+                value={singleName}
+                onChange={(e) => setSingleName(e.target.value)}
+                placeholder={`Contoh: Siswa ${currentCount + 1}`}
+                className="w-full text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              />
+            </div>
 
-          <button
-            id="btn-submit-quick-add"
-            type="submit"
-            disabled={!singleScore}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            {t.btnAddStudent}
-          </button>
-        </form>
+            <div className="w-full sm:w-36">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                {t.quickScoreLabel}
+              </label>
+              <input
+                id="input-quick-student-score"
+                type="number"
+                min="0"
+                max="1000"
+                step="any"
+                value={singleScore}
+                onChange={(e) => setSingleScore(e.target.value)}
+                placeholder="Contoh: 58"
+                required
+                className="w-full text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono"
+              />
+            </div>
+
+            <button
+              id="btn-submit-quick-add"
+              type="submit"
+              disabled={!singleScore}
+              className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              {t.btnAddStudent}
+            </button>
+          </form>
+        </div>
       )}
     </section>
   );
 };
+
