@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@layer base {
+  @media print {
+    header,
+    #tab-paste-input,
+    #tab-upload-file,
+    #tab-quick-add,
+    #btn-open-formula-guide,
+    #btn-print-report,
+    #btn-load-sample-data,
+    #btn-clear-all-data,
+    #btn-theme-toggle,
+    #file-upload-input,
+    section:has(#textarea-grades-input),
+    section:has(#slider-live-test-score),
+    .no-print {
+      display: none !important;
+    }
+
+    body {
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+
+    table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1 !important;
+      padding: 6px 8px !important;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Student Grade Converter & Scaler",
+  "description": "An interactive grade conversion and scaling tool for teachers with linear interpolation, square root curve, and KKM threshold scaling, comparative analytics, and Excel/CSV export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
