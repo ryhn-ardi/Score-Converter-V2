@@ -2,21 +2,25 @@ import React from 'react';
 import {
   Sliders,
   TrendingUp,
-  Percent,
   Compass,
   Zap,
-  HelpCircle,
   Hash,
   Calculator,
+  CheckCircle2,
+  Sparkles,
+  SlidersHorizontal,
+  Target,
 } from 'lucide-react';
-import { RoundingMode, ScalingConfig, ScalingMethod } from '../types';
+import { RoundingMode, ScalingConfig, ScalingMethod, MaxSourceMode, MinSourceMode } from '../types';
 import { computeScaledValue } from '../utils/gradeCalculations';
+import { Language, translations } from '../utils/translations';
 
 interface ScalingControlsProps {
   config: ScalingConfig;
   onChangeConfig: (newConfig: ScalingConfig) => void;
   datasetMin: number;
   datasetMax: number;
+  language: Language;
 }
 
 export const ScalingControls: React.FC<ScalingControlsProps> = ({
@@ -24,7 +28,9 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
   onChangeConfig,
   datasetMin,
   datasetMax,
+  language,
 }) => {
+  const t = translations[language];
   const [testScore, setTestScore] = React.useState<number>(55);
 
   const updateConfig = (partial: Partial<ScalingConfig>) => {
@@ -39,6 +45,9 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
     datasetMax || 95
   );
 
+  const activeMax = config.maxSourceMode === 'custom' ? config.customXMax : datasetMax;
+  const activeMin = config.minSourceMode === 'custom' ? config.customXMin : datasetMin;
+
   return (
     <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 transition-colors space-y-6">
       {/* Title & KKM Quick Control */}
@@ -46,10 +55,10 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sliders className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Conversion &amp; Scaling Parameters
+            {t.controlsTitle}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Choose a mathematical scaling method and calibrate thresholds in real-time.
+            {t.controlsSubtitle}
           </p>
         </div>
 
@@ -57,11 +66,11 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
         <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 px-3.5 py-2 rounded-xl">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1">
-              <span>KKM Passing Grade</span>
-              <span className="text-amber-600 dark:text-amber-400 font-normal">(Nilai Tuntas)</span>
+              <span>{t.kkmLabel}</span>
+              <span className="text-amber-600 dark:text-amber-400 font-normal">({t.kkmSubLabel})</span>
             </div>
             <div className="text-xs text-amber-700/80 dark:text-amber-400/80">
-              Threshold for passing
+              Threshold benchmark
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -81,7 +90,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
       {/* METHOD SELECTOR TABS */}
       <div>
         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
-          Select Scaling Engine
+          {t.selectEngine}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Method A: Linear */}
@@ -103,14 +112,14 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                 <TrendingUp className="w-4 h-4 text-indigo-500" />
               </div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Linear Scaling (Min-Max)
+                {t.methodA_name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Interpolates grades into a Target Min (e.g. 70) and Target Max (e.g. 95) while preserving proportional distances.
+                {t.methodA_desc}
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-indigo-100 dark:border-indigo-900/50 font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">
-              y = y_min + ((x-x_min)·Δy) / Δx
+              {t.methodA_formula}
             </div>
           </button>
 
@@ -133,14 +142,14 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                 <Zap className="w-4 h-4 text-amber-500" />
               </div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Square Root Curve
+                {t.methodB_name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Classic "Dongkrak Nilai Bawah". Gives a larger boost to lower scores while tapering off as scores approach 100.
+                {t.methodB_desc}
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-indigo-100 dark:border-indigo-900/50 font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">
-              y = √(x) × multiplier (cap: 100)
+              {t.methodB_formula}
             </div>
           </button>
 
@@ -163,16 +172,130 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                 <Compass className="w-4 h-4 text-emerald-500" />
               </div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                KKM Threshold Only
+                {t.methodC_name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Focuses specifically on students below KKM to bring them to passing, keeping already passing grades intact or smoothly adjusted.
+                {t.methodC_desc}
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-indigo-100 dark:border-indigo-900/50 font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">
-              Piecewise boost for x &lt; KKM
+              {t.methodC_formula}
             </div>
           </button>
+        </div>
+      </div>
+
+      {/* FEATURE 2: AUTO-DETECTION & SELECTION OF MAXIMUM SCORE (x_max) */}
+      <div className="bg-gradient-to-r from-indigo-50/90 to-blue-50/70 dark:from-slate-800/90 dark:to-indigo-950/40 p-4 sm:p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/60 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-indigo-600 text-white shadow-xs">
+              <Target className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {t.maxSourceTitle}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Tentukan apakah batas atas acuan (x_max) diambil dari nilai tertinggi siswa atau standar ujian kustom.
+              </p>
+            </div>
+          </div>
+
+          {/* Auto-detected maximum badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 shadow-xs self-start sm:self-auto">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {t.detectedMaxBadge.replace('{val}', String(datasetMax))}
+            </span>
+          </div>
+        </div>
+
+        {/* Radio Selector: Auto Detected vs Custom Max */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          {/* Option 1: Auto-detected */}
+          <label
+            onClick={() => updateConfig({ maxSourceMode: 'auto' })}
+            className={`p-3 rounded-xl border cursor-pointer transition flex items-start gap-3 ${
+              config.maxSourceMode === 'auto'
+                ? 'bg-white dark:bg-slate-800 border-indigo-600 dark:border-indigo-500 ring-2 ring-indigo-500/20 shadow-xs'
+                : 'bg-white/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="maxSourceMode"
+              checked={config.maxSourceMode === 'auto'}
+              onChange={() => updateConfig({ maxSourceMode: 'auto' })}
+              className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                  {t.maxSourceAuto}
+                </span>
+                <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                  x_max = {datasetMax}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Nilai tertinggi yang diperoleh siswa di kelas ({datasetMax}) otomatis menjadi patokan atas.
+              </p>
+            </div>
+          </label>
+
+          {/* Option 2: Custom Maximum */}
+          <label
+            onClick={() => updateConfig({ maxSourceMode: 'custom' })}
+            className={`p-3 rounded-xl border cursor-pointer transition flex items-start gap-3 ${
+              config.maxSourceMode === 'custom'
+                ? 'bg-white dark:bg-slate-800 border-indigo-600 dark:border-indigo-500 ring-2 ring-indigo-500/20 shadow-xs'
+                : 'bg-white/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="maxSourceMode"
+              checked={config.maxSourceMode === 'custom'}
+              onChange={() => updateConfig({ maxSourceMode: 'custom' })}
+              className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                  {t.maxSourceCustom}
+                </span>
+                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-[11px] font-mono text-slate-500">x_max =</span>
+                  <input
+                    id="input-custom-xmax"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={config.customXMax}
+                    onChange={(e) =>
+                      updateConfig({
+                        maxSourceMode: 'custom',
+                        customXMax: Number(e.target.value) || 100,
+                      })
+                    }
+                    className="w-16 text-center text-xs font-bold py-0.5 px-1.5 rounded-md border border-indigo-300 dark:border-indigo-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {t.customMaxHint} (nilai penuh skala soal sebelum konversi).
+              </p>
+            </div>
+          </label>
+        </div>
+
+        {/* Active source summary indicator */}
+        <div className="text-[11px] text-indigo-900/80 dark:text-indigo-300/80 flex items-center gap-1.5 font-mono">
+          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <span>
+            Batas atas aktif: <strong>x_max = {activeMax}</strong> ({config.maxSourceMode === 'auto' ? 'Otomatis dari Data' : 'Kustom Guru'}).
+          </span>
         </div>
       </div>
 
@@ -182,24 +305,17 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Linear Min-Max Parameters
+                {t.paramLinearTitle}
               </span>
-              <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
-                <input
-                  id="checkbox-use-actual-minmax"
-                  type="checkbox"
-                  checked={config.useActualMinMax}
-                  onChange={(e) => updateConfig({ useActualMinMax: e.target.checked })}
-                  className="rounded text-indigo-600 focus:ring-indigo-500"
-                />
-                <span>Auto-use dataset min ({datasetMin || 0}) &amp; max ({datasetMax || 100})</span>
-              </label>
+              <span className="text-xs font-mono text-slate-500">
+                Range acuan: [{activeMin} → {activeMax}]
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Target Min (y_min)
+                  {t.targetMinLabel}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -221,12 +337,14 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                     className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
-                <span className="text-[11px] text-slate-500">Lowest student gets this score (e.g. KKM {config.kkm})</span>
+                <span className="text-[11px] text-slate-500">
+                  {t.targetMinHint.replace('{kkm}', String(config.kkm))}
+                </span>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Target Max (y_max)
+                  {t.targetMaxLabel}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -248,44 +366,37 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                     className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
-                <span className="text-[11px] text-slate-500">Highest student gets this score (e.g. 95 or 100)</span>
+                <span className="text-[11px] text-slate-500">
+                  {t.targetMaxHint}
+                </span>
               </div>
 
-              {!config.useActualMinMax && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Source Min (x_min)
-                    </label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                  {t.minSourceTitle}
+                </label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={config.minSourceMode}
+                    onChange={(e) => updateConfig({ minSourceMode: e.target.value as MinSourceMode })}
+                    className="text-xs font-semibold py-1.5 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white flex-1"
+                  >
+                    <option value="auto">Auto Data ({datasetMin})</option>
+                    <option value="custom">Kustom</option>
+                  </select>
+                  {config.minSourceMode === 'custom' && (
                     <input
-                      id="input-source-min"
                       type="number"
-                      min="0"
-                      max="100"
                       value={config.customXMin}
                       onChange={(e) => updateConfig({ customXMin: Number(e.target.value) })}
-                      className="w-full text-xs font-bold py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                      className="w-16 text-center text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                     />
-                    <span className="text-[11px] text-slate-500">Custom lower bound</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Source Max (x_max)
-                    </label>
-                    <input
-                      id="input-source-max"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={config.customXMax}
-                      onChange={(e) => updateConfig({ customXMax: Number(e.target.value) })}
-                      className="w-full text-xs font-bold py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                    />
-                    <span className="text-[11px] text-slate-500">Custom upper bound</span>
-                  </div>
-                </>
-              )}
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-500">
+                  x_min aktif = {activeMin}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -295,7 +406,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Multiplier (Default = 10)
+                  {t.sqrtMultiplierLabel}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -320,13 +431,15 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                   />
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  Formula: y = √(x) × {config.sqrtMultiplier}. (Example: raw 49 becomes {(Math.sqrt(49) * config.sqrtMultiplier).toFixed(1)})
+                  {t.sqrtMultiplierHint
+                    .replace('{val}', (Math.sqrt(49) * config.sqrtMultiplier).toFixed(1))
+                    .replace('{val2}', (Math.sqrt(64) * config.sqrtMultiplier).toFixed(1))}
                 </span>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Maximum Score Cap
+                  {t.maxCapLabel}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -349,7 +462,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                   />
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  Prevents any boosted score from exceeding this ceiling
+                  {t.maxCapHint}
                 </span>
               </div>
             </div>
@@ -361,7 +474,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Target Min for Failing Scores (y_min)
+                  {t.kkmTargetMinLabel}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -384,13 +497,13 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                   />
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  The lowest score in class will scale up to this value, and scale smoothly up to KKM ({config.kkm}).
+                  {t.kkmTargetMinHint.replace('{kkm}', String(config.kkm))}
                 </span>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Scores Above KKM Handling
+                  {t.kkmAboveTitle}
                 </label>
                 <div className="space-y-2 mt-1">
                   <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -402,7 +515,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                       onChange={() => updateConfig({ kkmScaleAbove: true })}
                       className="text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span>Scale smoothly from KKM to {config.targetMax} (Preserves rank order)</span>
+                    <span>{t.kkmAboveSmooth.replace('{targetMax}', String(config.targetMax))}</span>
                   </label>
                   <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
                     <input
@@ -413,7 +526,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                       onChange={() => updateConfig({ kkmScaleAbove: false })}
                       className="text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span>Keep passing scores intact (Original score untouched)</span>
+                    <span>{t.kkmAboveKeep}</span>
                   </label>
                 </div>
               </div>
@@ -428,12 +541,12 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
         <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <Hash className="w-4 h-4 text-indigo-500" />
-            Rounding &amp; Precision Options
+            {t.roundingTitle}
           </span>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1 font-medium">
-                Decimal Places
+                {t.decimalsLabel}
               </label>
               <div className="flex rounded-lg bg-slate-200 dark:bg-slate-700 p-0.5">
                 {[0, 1, 2].map((dec) => (
@@ -448,7 +561,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    {dec === 0 ? 'Integer' : `${dec} dec`}
+                    {dec === 0 ? t.integerOption : `${dec} dec`}
                   </button>
                 ))}
               </div>
@@ -456,7 +569,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
 
             <div>
               <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1 font-medium">
-                Rounding Mode
+                {t.roundingModeLabel}
               </label>
               <div className="flex rounded-lg bg-slate-200 dark:bg-slate-700 p-0.5">
                 {(['round', 'floor', 'ceil'] as RoundingMode[]).map((mode) => (
@@ -471,7 +584,7 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    {mode}
+                    {mode === 'round' ? t.roundModeStandard : mode === 'floor' ? t.roundModeFloor : t.roundModeCeil}
                   </button>
                 ))}
               </div>
@@ -484,17 +597,17 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider flex items-center gap-1.5">
               <Calculator className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              Live Score Simulator
+              {t.simulatorTitle}
             </span>
             <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-mono">
-              Drag to test any score
+              {t.simulatorDragHint}
             </span>
           </div>
 
           <div className="flex items-center gap-4 my-2">
             <div className="flex-1">
               <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
-                <span>Raw Test: <strong>{testScore}</strong></span>
+                <span>{t.rawTestLabel} <strong>{testScore}</strong></span>
                 <span>KKM: {config.kkm}</span>
               </div>
               <input
@@ -510,13 +623,13 @@ export const ScalingControls: React.FC<ScalingControlsProps> = ({
 
             <div className="text-center px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-700 shadow-xs min-w-24">
               <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
-                Converted
+                {t.convertedResultLabel}
               </div>
               <div className="text-xl font-extrabold text-indigo-600 dark:text-indigo-300 font-mono">
                 {testConverted}
               </div>
               <div className={`text-[10px] font-semibold ${testConverted >= config.kkm ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {testConverted >= config.kkm ? '✓ Tuntas' : '✗ Belum Tuntas'}
+                {testConverted >= config.kkm ? t.statusPassed : t.statusFailed}
               </div>
             </div>
           </div>

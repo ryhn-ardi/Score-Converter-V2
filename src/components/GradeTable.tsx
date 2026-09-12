@@ -8,7 +8,6 @@ import {
   Copy,
   Check,
   FileSpreadsheet,
-  FileText,
   Trash2,
   Edit2,
   CheckCircle2,
@@ -16,10 +15,10 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
 } from 'lucide-react';
-import { StudentGrade, StudentRawInput } from '../types';
+import { StudentGrade } from '../types';
 import { copyToClipboardForExcel, exportToCSV, exportToExcel } from '../utils/fileParser';
+import { Language, translations } from '../utils/translations';
 
 interface GradeTableProps {
   grades: StudentGrade[];
@@ -28,6 +27,7 @@ interface GradeTableProps {
   onUpdateRawScore: (id: string, newScore: number) => void;
   onUpdateName: (id: string, newName: string) => void;
   onDeleteStudent: (id: string) => void;
+  language: Language;
 }
 
 type SortField = 'originalIndex' | 'name' | 'rawScore' | 'scaledScore' | 'delta' | 'passedAfter';
@@ -41,7 +41,9 @@ export const GradeTable: React.FC<GradeTableProps> = ({
   onUpdateRawScore,
   onUpdateName,
   onDeleteStudent,
+  language,
 }) => {
+  const t = translations[language];
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [sortField, setSortField] = useState<SortField>('originalIndex');
@@ -147,10 +149,10 @@ export const GradeTable: React.FC<GradeTableProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Student Grade Table &amp; Results
+            {t.tableTitle}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Click any student to edit directly in-table. Sort, filter, and export into Excel or CSV.
+            {t.tableSubtitle}
           </p>
         </div>
 
@@ -167,10 +169,10 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed'
             }`}
-            title="Copy table formatted for direct pasting into Excel / Sheets"
+            title={t.btnCopyExcel}
           >
             {copySuccess ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-indigo-500" />}
-            <span>{copySuccess ? 'Copied to Clipboard!' : 'Copy for Excel'}</span>
+            <span>{copySuccess ? t.btnCopied : t.btnCopyExcel}</span>
           </button>
 
           {/* Export Excel (.xlsx) */}
@@ -183,7 +185,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
             title="Download formatted Excel spreadsheet"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>Excel (.xlsx)</span>
+            <span>{t.btnExportExcel}</span>
           </button>
 
           {/* Export CSV */}
@@ -196,7 +198,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
             title="Download CSV file"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>CSV</span>
+            <span>{t.btnExportCSV}</span>
           </button>
         </div>
       </div>
@@ -214,7 +216,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search student name..."
+            placeholder={t.searchPlaceholder}
             className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
           />
         </div>
@@ -234,7 +236,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            All ({grades.length})
+            {t.filterAll} ({grades.length})
           </button>
           <button
             id="filter-status-remedial"
@@ -249,7 +251,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Raw Below KKM ({remedialCount})
+            {t.filterRemedial} ({remedialCount})
           </button>
           <button
             id="filter-status-passed"
@@ -264,7 +266,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Raw Passed ({grades.length - remedialCount})
+            {t.filterPassed} ({grades.length - remedialCount})
           </button>
         </div>
       </div>
@@ -279,7 +281,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 className="py-3 px-3.5 cursor-pointer hover:text-indigo-600 transition w-14"
               >
                 <div className="flex items-center gap-1">
-                  <span>No</span>
+                  <span>{t.thNo}</span>
                   {sortField === 'originalIndex' ? (
                     sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                   ) : (
@@ -293,7 +295,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 className="py-3 px-3.5 cursor-pointer hover:text-indigo-600 transition"
               >
                 <div className="flex items-center gap-1">
-                  <span>Student Name</span>
+                  <span>{t.thName}</span>
                   {sortField === 'name' ? (
                     sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                   ) : (
@@ -307,7 +309,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 className="py-3 px-3.5 cursor-pointer hover:text-indigo-600 transition text-right w-28"
               >
                 <div className="flex items-center justify-end gap-1">
-                  <span>Raw (Asli)</span>
+                  <span>{t.thRaw}</span>
                   {sortField === 'rawScore' ? (
                     sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                   ) : (
@@ -321,7 +323,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 className="py-3 px-3.5 cursor-pointer hover:text-indigo-600 transition text-right w-32"
               >
                 <div className="flex items-center justify-end gap-1">
-                  <span>Scaled (Konversi)</span>
+                  <span>{t.thScaled}</span>
                   {sortField === 'scaledScore' ? (
                     sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                   ) : (
@@ -335,7 +337,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 className="py-3 px-3.5 cursor-pointer hover:text-indigo-600 transition text-right w-24"
               >
                 <div className="flex items-center justify-end gap-1">
-                  <span>Delta (Δ)</span>
+                  <span>{t.thDelta}</span>
                   {sortField === 'delta' ? (
                     sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                   ) : (
@@ -349,7 +351,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 className="py-3 px-3.5 cursor-pointer hover:text-indigo-600 transition text-center w-32"
               >
                 <div className="flex items-center justify-center gap-1">
-                  <span>Status KKM</span>
+                  <span>{t.thStatus}</span>
                   {sortField === 'passedAfter' ? (
                     sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                   ) : (
@@ -358,7 +360,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                 </div>
               </th>
 
-              <th className="py-3 px-3.5 text-center w-20">Actions</th>
+              <th className="py-3 px-3.5 text-center w-20">{t.thActions}</th>
             </tr>
           </thead>
 
@@ -366,7 +368,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
             {sortedData.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-slate-400">
-                  {grades.length === 0 ? 'No students added yet. Input or upload grades above.' : 'No students match your filter.'}
+                  {grades.length === 0 ? 'Belum ada data siswa. Silakan masukkan nilai di atas.' : 'Tidak ada siswa yang cocok dengan filter.'}
                 </td>
               </tr>
             ) : (
@@ -398,7 +400,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                         <span
                           onClick={() => startEdit(student)}
                           className="font-medium hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
-                          title="Click to edit name"
+                          title="Klik untuk ubah nama"
                         >
                           {student.name}
                         </span>
@@ -424,7 +426,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                               ? 'text-rose-600 dark:text-rose-400 font-semibold'
                               : 'text-slate-700 dark:text-slate-300'
                           }`}
-                          title="Click to edit raw score"
+                          title="Klik untuk ubah nilai asli"
                         >
                           {student.rawScore}
                         </span>
@@ -456,12 +458,12 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                       {student.passedAfter ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                           <CheckCircle2 className="w-3 h-3" />
-                          Tuntas
+                          {t.statusBadgeTuntas}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                           <AlertCircle className="w-3 h-3" />
-                          Belum
+                          {t.statusBadgeBelum}
                         </span>
                       )}
                     </td>
@@ -474,7 +476,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                             type="button"
                             onClick={() => saveEdit(student.id)}
                             className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer"
-                            title="Save"
+                            title="Simpan"
                           >
                             <Check className="w-4 h-4" />
                           </button>
@@ -483,7 +485,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                             type="button"
                             onClick={() => startEdit(student)}
                             className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                            title="Edit"
+                            title="Ubah data"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
@@ -492,7 +494,7 @@ export const GradeTable: React.FC<GradeTableProps> = ({
                           type="button"
                           onClick={() => onDeleteStudent(student.id)}
                           className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
-                          title="Delete student"
+                          title="Hapus siswa"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -510,8 +512,10 @@ export const GradeTable: React.FC<GradeTableProps> = ({
       {sortedData.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
           <div>
-            Showing {(currentPage - 1) * pageSize + 1} to{' '}
-            {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} students
+            {t.showingPagination
+              .replace('{start}', String((currentPage - 1) * pageSize + 1))
+              .replace('{end}', String(Math.min(currentPage * pageSize, sortedData.length)))
+              .replace('{total}', String(sortedData.length))}
           </div>
 
           {totalPages > 1 && (

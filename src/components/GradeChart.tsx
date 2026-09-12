@@ -16,6 +16,7 @@ import {
 import { BarChart3, LineChart, Info } from 'lucide-react';
 import { ScalingConfig, StudentGrade } from '../types';
 import { computeScaledValue } from '../utils/gradeCalculations';
+import { Language, translations } from '../utils/translations';
 
 // Register Chart.js components
 ChartJS.register(
@@ -37,6 +38,7 @@ interface GradeChartProps {
   kkm: number;
   config: ScalingConfig;
   isDark: boolean;
+  language: Language;
 }
 
 const BINS = [
@@ -53,7 +55,9 @@ export const GradeChart: React.FC<GradeChartProps> = ({
   kkm,
   config,
   isDark,
+  language,
 }) => {
+  const t = translations[language];
   const [chartView, setChartView] = useState<'histogram' | 'curve'>('histogram');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<ChartJS | null>(null);
@@ -88,7 +92,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
           labels: BINS.map((b) => b.label),
           datasets: [
             {
-              label: 'Raw Scores (Sebelum)',
+              label: t.chartLegendRaw,
               data: rawCounts,
               backgroundColor: isDark ? 'rgba(148, 163, 184, 0.45)' : 'rgba(100, 116, 139, 0.55)',
               borderColor: isDark ? '#94a3b8' : '#64748b',
@@ -96,7 +100,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
               borderRadius: 6,
             },
             {
-              label: 'Scaled Scores (Sesudah)',
+              label: t.chartLegendScaled,
               data: scaledCounts,
               backgroundColor: isDark ? 'rgba(99, 102, 241, 0.7)' : 'rgba(79, 70, 229, 0.75)',
               borderColor: isDark ? '#818cf8' : '#6366f1',
@@ -142,7 +146,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
                   const val = context.raw as number;
                   const total = grades.length || 1;
                   const pct = ((val / total) * 100).toFixed(1);
-                  return ` ${context.dataset.label}: ${val} students (${pct}%)`;
+                  return ` ${context.dataset.label}: ${val} (${pct}%)`;
                 },
               },
             },
@@ -173,7 +177,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
               },
               title: {
                 display: true,
-                text: 'Number of Students',
+                text: t.chartYAxis,
                 color: textColor,
                 font: {
                   size: 11,
@@ -206,7 +210,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
           labels: xRange,
           datasets: [
             {
-              label: 'Scaled Curve (x → y)',
+              label: `${t.chartTabCurve} (x → y)`,
               data: yValues,
               borderColor: '#6366f1',
               backgroundColor: 'rgba(99, 102, 241, 0.1)',
@@ -216,7 +220,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
               fill: false,
             },
             {
-              label: 'Original (y = x reference)',
+              label: t.chartLegendIdentity,
               data: identityValues,
               borderColor: isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(148, 163, 184, 0.5)',
               borderDash: [5, 5],
@@ -274,7 +278,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
               },
               title: {
                 display: true,
-                text: 'Raw Score (x)',
+                text: t.chartXAxisRaw,
                 color: textColor,
               },
             },
@@ -290,7 +294,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
               },
               title: {
                 display: true,
-                text: 'Scaled Score (y)',
+                text: t.chartYAxisScaled,
                 color: textColor,
               },
             },
@@ -305,7 +309,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
         chartInstanceRef.current = null;
       }
     };
-  }, [grades, kkm, config, isDark, chartView]);
+  }, [grades, kkm, config, isDark, chartView, language, t]);
 
   return (
     <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 transition-colors">
@@ -313,10 +317,10 @@ export const GradeChart: React.FC<GradeChartProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Visual Grade Distribution Shift
+            {t.chartTitle}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Compare score distribution before and after scaling, or view the mathematical transfer curve.
+            {t.chartSubtitle}
           </p>
         </div>
 
@@ -333,7 +337,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
             }`}
           >
             <BarChart3 className="w-3.5 h-3.5" />
-            Distribution Histogram
+            {t.chartTabHistogram}
           </button>
           <button
             id="btn-chart-view-curve"
@@ -346,7 +350,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
             }`}
           >
             <LineChart className="w-3.5 h-3.5" />
-            Transformation Curve
+            {t.chartTabCurve}
           </button>
         </div>
       </div>
@@ -355,7 +359,7 @@ export const GradeChart: React.FC<GradeChartProps> = ({
       <div className="relative w-full h-72 sm:h-80">
         {grades.length === 0 ? (
           <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-            No student data available to display chart. Please input grades above.
+            {language === 'id' ? 'Belum ada data nilai siswa untuk ditampilkan pada grafik.' : 'No student data available to display chart. Please input grades above.'}
           </div>
         ) : (
           <canvas ref={canvasRef} />
@@ -368,12 +372,12 @@ export const GradeChart: React.FC<GradeChartProps> = ({
           <Info className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
           <span>
             {chartView === 'histogram'
-              ? `KKM benchmark set at ${kkm}. Notice the leftward shift of failing brackets into passing ranges.`
-              : 'The curve illustrates the formula transfer function. Scores above the dotted line received a boost.'}
+              ? t.chartFooterHistogram.replace('{kkm}', String(kkm))
+              : t.chartFooterCurve}
           </span>
         </div>
         <span className="font-mono text-[11px]">
-          Total: {grades.length} Students
+          Total: {grades.length} {language === 'id' ? 'Siswa' : 'Students'}
         </span>
       </div>
     </section>

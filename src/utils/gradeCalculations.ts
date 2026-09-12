@@ -21,9 +21,11 @@ export function computeScaledValue(
 ): number {
   let computed = raw;
 
+  // Resolve source min & max based on user option (auto vs custom)
+  const xMin = config.minSourceMode === 'custom' ? config.customXMin : datasetMin;
+  const xMax = config.maxSourceMode === 'custom' ? config.customXMax : datasetMax;
+
   if (config.method === 'linear') {
-    const xMin = config.useActualMinMax ? datasetMin : config.customXMin;
-    const xMax = config.useActualMinMax ? datasetMax : config.customXMax;
     const yMin = config.targetMin;
     const yMax = config.targetMax;
 
@@ -40,8 +42,6 @@ export function computeScaledValue(
     // KKM Threshold Only:
     // Scale scores below KKM so lowest score reaches targetMin (e.g. KKM or designated min)
     const kkm = config.kkm;
-    const xMin = config.useActualMinMax ? datasetMin : config.customXMin;
-    const xMax = config.useActualMinMax ? datasetMax : config.customXMax;
     const targetMin = config.targetMin;
     const targetMax = config.targetMax;
 

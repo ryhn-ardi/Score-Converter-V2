@@ -3,7 +3,6 @@ import {
   ClipboardPaste,
   FileSpreadsheet,
   Plus,
-  Upload,
   CheckCircle2,
   AlertCircle,
   Sparkles,
@@ -13,16 +12,20 @@ import {
 } from 'lucide-react';
 import { StudentRawInput } from '../types';
 import { parsePastedText, parseUploadedFile } from '../utils/fileParser';
+import { Language, translations } from '../utils/translations';
 
 interface DataInputSectionProps {
   onLoadStudents: (newStudents: StudentRawInput[], mode: 'replace' | 'append') => void;
   currentCount: number;
+  language: Language;
 }
 
 export const DataInputSection: React.FC<DataInputSectionProps> = ({
   onLoadStudents,
   currentCount,
+  language,
 }) => {
+  const t = translations[language];
   const [activeTab, setActiveTab] = useState<'paste' | 'upload' | 'quick-add'>('paste');
   const [pastedText, setPastedText] = useState('');
   const [detectedCount, setDetectedCount] = useState<number | null>(null);
@@ -52,14 +55,14 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
     if (!pastedText.trim()) return;
     const students = parsePastedText(pastedText);
     if (students.length === 0) {
-      setUploadError('No valid numeric grades were found in the text.');
+      setUploadError(t.msgNoScoresFound);
       return;
     }
     onLoadStudents(students, mode);
     setPastedText('');
     setDetectedCount(null);
     setUploadError(null);
-    setUploadSuccess(`Successfully loaded ${students.length} student records!`);
+    setUploadSuccess(t.msgLoadedSuccess.replace('{count}', String(students.length)));
     setTimeout(() => setUploadSuccess(null), 4000);
   };
 
@@ -70,7 +73,9 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
     try {
       const students = await parseUploadedFile(file);
       onLoadStudents(students, mode);
-      setUploadSuccess(`Successfully imported ${students.length} students from ${file.name}`);
+      setUploadSuccess(
+        t.msgImportSuccess.replace('{count}', String(students.length)).replace('{fileName}', file.name)
+      );
       setTimeout(() => setUploadSuccess(null), 4000);
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Error reading file. Please check format.';
@@ -113,7 +118,7 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
 
     const newStudent: StudentRawInput = {
       id: `manual_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      name: singleName.trim() || `Student ${currentCount + 1}`,
+      name: singleName.trim() || `Siswa ${currentCount + 1}`,
       rawScore: score,
     };
 
@@ -129,10 +134,10 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ClipboardPaste className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Input &amp; Import Student Grades
+            {t.inputTitle}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Copy-paste directly from Excel/Sheets, upload a spreadsheet, or add entries manually.
+            {t.inputSubtitle}
           </p>
         </div>
 
@@ -149,7 +154,7 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
             }`}
           >
             <ClipboardPaste className="w-3.5 h-3.5" />
-            Paste from Excel / Sheets
+            {t.tabPaste}
           </button>
           <button
             id="tab-upload-file"
@@ -162,7 +167,7 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
             }`}
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            Upload File (.xlsx / .csv)
+            {t.tabUpload}
           </button>
           <button
             id="tab-quick-add"
@@ -175,7 +180,7 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
             }`}
           >
             <Plus className="w-3.5 h-3.5" />
-            Quick Add
+            {t.tabQuickAdd}
           </button>
         </div>
       </div>
@@ -204,20 +209,13 @@ export const DataInputSection: React.FC<DataInputSectionProps> = ({
               rows={4}
               value={pastedText}
               onChange={(e) => handlePastedTextChange(e.target.value)}
-              placeholder="Paste rows directly here from Excel or Google Sheets, for example:
-Budi Santoso	65
-Siti Rahma	82
-Ahmad Fauzi	54
--- OR simple raw numbers:
-65
-82
-54"
+              placeholder={t.textareaPlaceholder}
               className="w-full font-mono text-xs sm:text-sm p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition"
             />
             {detectedCount !== null && (
               <div className="absolute right-3 bottom-3 text-xs bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 shadow-xs">
                 <Sparkles className="w-3.5 h-3.5" />
-                Detected {detectedCount} {detectedCount === 1 ? 'student' : 'students'}
+                {t.detectedStudents.replace('{count}', String(detectedCount))}
               </div>
             )}
           </div>
@@ -225,9 +223,7 @@ Ahmad Fauzi	54
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <Info className="w-4 h-4 text-indigo-500 shrink-0" />
-              <span>
-                Auto-detects student names if present alongside scores (tab, comma, or newline separated).
-              </span>
+              <span>{t.autoDetectNotice}</span>
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
@@ -240,7 +236,7 @@ Ahmad Fauzi	54
                 title="Add to current student list"
               >
                 <Layers className="w-3.5 h-3.5" />
-                Append ({currentCount} existing)
+                {t.btnAppend.replace('{count}', String(currentCount))}
               </button>
 
               <button
@@ -251,7 +247,7 @@ Ahmad Fauzi	54
                 className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shadow-indigo-500/20 transition cursor-pointer flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Apply Grades (Replace)
+                {t.btnApplyReplace}
               </button>
             </div>
           </div>
@@ -289,13 +285,10 @@ Ahmad Fauzi	54
               )}
             </div>
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              Click to browse or drag &amp; drop your spreadsheet file
+              {t.dropTitle}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Supports <strong className="text-slate-700 dark:text-slate-300">.xlsx</strong>,{' '}
-              <strong className="text-slate-700 dark:text-slate-300">.xls</strong>, and{' '}
-              <strong className="text-slate-700 dark:text-slate-300">.csv</strong>. Automatically detects
-              Student Name and Score columns!
+              {t.dropSubtitle}
             </p>
           </div>
         </div>
@@ -306,21 +299,21 @@ Ahmad Fauzi	54
         <form onSubmit={handleQuickAdd} className="flex flex-col sm:flex-row items-end gap-3">
           <div className="w-full sm:flex-1">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Student Name (Optional)
+              {t.quickNameLabel}
             </label>
             <input
               id="input-quick-student-name"
               type="text"
               value={singleName}
               onChange={(e) => setSingleName(e.target.value)}
-              placeholder={`e.g. Student ${currentCount + 1}`}
+              placeholder={`Contoh: Siswa ${currentCount + 1}`}
               className="w-full text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
             />
           </div>
 
           <div className="w-full sm:w-36">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Raw Score (0 - 100)
+              {t.quickScoreLabel}
             </label>
             <input
               id="input-quick-student-score"
@@ -330,7 +323,7 @@ Ahmad Fauzi	54
               step="any"
               value={singleScore}
               onChange={(e) => setSingleScore(e.target.value)}
-              placeholder="e.g. 58"
+              placeholder="Contoh: 58"
               required
               className="w-full text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-mono"
             />
@@ -343,7 +336,7 @@ Ahmad Fauzi	54
             className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
           >
             <Plus className="w-4 h-4" />
-            Add Student
+            {t.btnAddStudent}
           </button>
         </form>
       )}

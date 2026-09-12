@@ -9,14 +9,16 @@ import { FormulaModal } from './components/FormulaModal';
 import { SAMPLE_STUDENT_DATA } from './data/sampleData';
 import { ScalingConfig, StudentRawInput } from './types';
 import { computeStatistics, processStudentGrades } from './utils/gradeCalculations';
-import { Sparkles, FileText, CheckCircle2 } from 'lucide-react';
+import { Language, translations } from './utils/translations';
+import { FileText } from 'lucide-react';
 
 const DEFAULT_CONFIG: ScalingConfig = {
   method: 'linear',
   kkm: 75,
   targetMin: 75,
   targetMax: 95,
-  useActualMinMax: true,
+  maxSourceMode: 'auto',
+  minSourceMode: 'auto',
   customXMin: 0,
   customXMax: 100,
   sqrtMultiplier: 10,
@@ -28,6 +30,17 @@ const DEFAULT_CONFIG: ScalingConfig = {
 };
 
 export default function App() {
+  // Language state (default Indonesian 'id', can toggle to 'en')
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('grade_scaler_lang');
+      if (saved === 'id' || saved === 'en') return saved;
+    }
+    return 'id'; // Default to Indonesian
+  });
+
+  const t = translations[language];
+
   // Theme state
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -69,7 +82,9 @@ export default function App() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   // Subject title for print & export header
-  const [examTitle, setExamTitle] = useState('Final Semester Exam - Mathematics');
+  const [examTitle, setExamTitle] = useState(() =>
+    language === 'id' ? 'Penilaian Akhir Semester - Matematika' : 'Final Semester Exam - Mathematics'
+  );
 
   // Sync theme to document class
   useEffect(() => {
@@ -81,6 +96,11 @@ export default function App() {
       localStorage.setItem('grade_scaler_theme', 'light');
     }
   }, [isDark]);
+
+  // Persist language
+  useEffect(() => {
+    localStorage.setItem('grade_scaler_lang', language);
+  }, [language]);
 
   // Persist students
   useEffect(() => {
@@ -116,17 +136,25 @@ export default function App() {
   const methodName = useMemo(() => {
     switch (config.method) {
       case 'linear':
-        return `Linear Min-Max (Min: ${config.targetMin}, Max: ${config.targetMax})`;
+        return language === 'id'
+          ? `Linier Min-Max (Min: ${config.targetMin}, Max: ${config.targetMax})`
+          : `Linear Min-Max (Min: ${config.targetMin}, Max: ${config.targetMax})`;
       case 'sqrt':
-        return `Square Root Curve (Multiplier: ${config.sqrtMultiplier})`;
+        return language === 'id'
+          ? `Kurva Akar Kuadrat (Pengali: ${config.sqrtMultiplier})`
+          : `Square Root Curve (Multiplier: ${config.sqrtMultiplier})`;
       case 'kkm-threshold':
-        return `KKM Threshold Piecewise (Target Min: ${config.targetMin})`;
+        return language === 'id'
+          ? `Ambang Batas KKM (Target Min: ${config.targetMin})`
+          : `KKM Threshold Piecewise (Target Min: ${config.targetMin})`;
       case 'constant-add':
-        return `Constant Boost (+${config.constantAdd} pts)`;
+        return language === 'id'
+          ? `Tambah Nilai Tetap (+${config.constantAdd} poin)`
+          : `Constant Boost (+${config.constantAdd} pts)`;
       default:
         return 'Standard Scaling';
     }
-  }, [config]);
+  }, [config, language]);
 
   // Handlers
   const handleLoadStudents = (newStudents: StudentRawInput[], mode: 'replace' | 'append') => {
@@ -159,7 +187,10 @@ export default function App() {
   };
 
   const handleClearData = () => {
-    if (window.confirm('Are you sure you want to clear all student records?')) {
+    const confirmMsg = language === 'id'
+      ? 'Apakah Anda yakin ingin menghapus semua data nilai siswa?'
+      : 'Are you sure you want to clear all student records?';
+    if (window.confirm(confirmMsg)) {
       setStudents([]);
     }
   };
@@ -168,12 +199,18 @@ export default function App() {
     window.print();
   };
 
+  const handleToggleLanguage = () => {
+    setLanguage((prev) => (prev === 'id' ? 'en' : 'id'));
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors font-sans pb-16">
       {/* Header */}
       <Header
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
+        language={language}
+        onToggleLanguage={handleToggleLanguage}
         onResetSample={handleResetSample}
         onClearData={handleClearData}
         onOpenGuide={() => setIsGuideOpen(true)}
@@ -188,16 +225,16 @@ export default function App() {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-bold uppercase tracking-wide">
-                Laporan Hasil Konversi &amp; Rekapitulasi Nilai Siswa
+                {language === 'id' ? 'Laporan Hasil Konversi & Rekapitulasi Nilai Siswa' : 'Official Student Grade Scaling & Recapitulation Report'}
               </h1>
               <p className="text-sm text-slate-600 mt-1">
-                Mata Pelajaran / Ujian: {examTitle}
+                {language === 'id' ? 'Mata Pelajaran / Ujian:' : 'Subject / Assessment:'} {examTitle}
               </p>
             </div>
             <div className="text-right text-xs text-slate-500">
-              <p>Metode: {methodName}</p>
-              <p>Standar KKM: {config.kkm}</p>
-              <p>Tanggal Cetak: {new Date().toLocaleDateString()}</p>
+              <p>{language === 'id' ? 'Metode:' : 'Method:'} {methodName}</p>
+              <p>{language === 'id' ? 'Standar KKM:' : 'KKM Standard:'} {config.kkm}</p>
+              <p>{language === 'id' ? 'Tanggal Cetak:' : 'Printed Date:'} {new Date().toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US')}</p>
             </div>
           </div>
         </div>
@@ -207,21 +244,22 @@ export default function App() {
           <div className="flex items-center gap-2.5 flex-1">
             <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-              Assessment / Class:
+              {language === 'id' ? 'Mata Pelajaran / Kelas:' : 'Assessment / Class:'}
             </span>
             <input
               id="input-exam-title"
               type="text"
               value={examTitle}
               onChange={(e) => setExamTitle(e.target.value)}
-              placeholder="e.g. Midterm Physics Grade - Class 10 IPA"
+              placeholder={language === 'id' ? 'Contoh: Penilaian Harian Fisika - Kelas X IPA 1' : 'e.g. Midterm Physics Grade - Class 10 IPA'}
               className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-white bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 focus:border-indigo-500 focus:outline-none w-full max-w-md py-0.5"
             />
           </div>
 
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono text-[11px]">
-              Active Engine: <strong className="text-indigo-600 dark:text-indigo-400">{config.method.toUpperCase()}</strong>
+              {language === 'id' ? 'Metode Aktif:' : 'Active Engine:'}{' '}
+              <strong className="text-indigo-600 dark:text-indigo-400">{config.method.toUpperCase()}</strong>
             </span>
           </div>
         </div>
@@ -231,6 +269,7 @@ export default function App() {
           <DataInputSection
             onLoadStudents={handleLoadStudents}
             currentCount={students.length}
+            language={language}
           />
         </div>
 
@@ -241,11 +280,16 @@ export default function App() {
             onChangeConfig={setConfig}
             datasetMin={datasetMin}
             datasetMax={datasetMax}
+            language={language}
           />
         </div>
 
         {/* Section 3: Comparative Statistics Summary */}
-        <StatsOverview stats={stats} kkm={config.kkm} />
+        <StatsOverview
+          stats={stats}
+          kkm={config.kkm}
+          language={language}
+        />
 
         {/* Section 4: Visual Chart (Side-by-side distribution) */}
         <div className="no-print">
@@ -254,6 +298,7 @@ export default function App() {
             kkm={config.kkm}
             config={config}
             isDark={isDark}
+            language={language}
           />
         </div>
 
@@ -265,6 +310,7 @@ export default function App() {
           onUpdateRawScore={handleUpdateRawScore}
           onUpdateName={handleUpdateName}
           onDeleteStudent={handleDeleteStudent}
+          language={language}
         />
       </main>
 
@@ -272,6 +318,7 @@ export default function App() {
       <FormulaModal
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
+        language={language}
       />
     </div>
   );
